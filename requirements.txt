@@ -1,0 +1,11 @@
+numpy
+scipy
+jupyter
+tqdm
+matplotlib
+line_profiler
+joblib
+scikit-image
+sklearn
+PyWavelets
+SciencePlots
