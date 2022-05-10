@@ -13,9 +13,9 @@ try:
 except IOError:
     readme = ''
 
-if not (3, 5) <= sys.version_info[:2]:
+if not (3, 7) <= sys.version_info[:2]:
     raise Exception(
-        'zfista requires Python 3.5 or later. \n Now running on {0}'.format(sys.version))
+        'zfista requires Python 3.7 or later. \n Now running on {0}'.format(sys.version))
 
 with Path('requirements.txt').open() as f:
     INSTALL_REQUIRES = [line.strip() for line in f.readlines() if line]

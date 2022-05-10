@@ -8,7 +8,7 @@ Hiroki Tanabe, Ellen H. Fukuda, and Nobuo Yamashita
 ```
 
 ## Requirements
-- Python 3.5 or later
+- Python 3.7 or later
 
 ## Install
 ```sh
