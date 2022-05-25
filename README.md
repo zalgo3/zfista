@@ -13,11 +13,9 @@ Hiroki Tanabe, Ellen H. Fukuda, and Nobuo Yamashita
 ```
 
 The solver can deal with the unconstrained problem written by
-```
-minimize F(x) := f(x) + g(x),
-```
-where `f` and `g` are scalar or vector valued function, `f` is continuously differentiable, `g` is closed, proper and convex.
-Note that FISTA also requires `f` to be convex.
+$$\min_{x \in \mathbf{R}^n} \quad F(x) \coloneqq f(x) + g(x),$$
+where $f$ and $g$ are scalar or vector valued function, $f$ is continuously differentiable, $g$ is closed, proper and convex.
+Note that FISTA also requires $f$ to be convex.
 
 ## Requirements
 - Python 3.7 or later
