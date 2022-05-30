@@ -131,3 +131,26 @@ class TestProximalGradient(unittest.TestCase):
             if l1_ratio == 1:
                 assert_array_almost_equal(res.x, [0], decimal=3)
                 assert_array_almost_equal(res_nesterov.x, [0], decimal=3)
+
+    def test_minimize_proximal_gradient_return_all(self):
+        A = np.array([[0], [0], [0]])
+        b = np.array([0, 0, 0])
+        x0 = np.random.random(1)
+        l1_ratio = .1
+
+        def f(x):
+            return np.linalg.norm(A @ x - b) ** 2 / 6
+
+        def g(x):
+            return l1_ratio * np.linalg.norm(x, ord=1)
+
+        def jac_f(x):
+            return A.T @ (A @ x - b) / 3
+
+        def prox_wsum_g(weight, x):
+            return _soft_threshold(x, l1_ratio * weight)
+
+        res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, return_all=True)
+        self.assertIn('allvecs', res)
+        self.assertIn('all_error_criteria', res)
+
