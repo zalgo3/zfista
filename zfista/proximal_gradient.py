@@ -188,7 +188,7 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
         If `nesterov` is False, then `nesterov_ratio` will be ignored.
 
     return_all : bool, default=False
-        If True, return a list of the sequence {x^k}.
+        If True, return lists of the sequence {x^k} and the error criteria ||x^k - y^k||_\infty.
 
     verbose : bool, default=False
         If True, display progress during iterations.
@@ -220,6 +220,9 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
 
     allvecs : list of array, optional
         A list of the sequence {x^k}
+
+    all_error_criteria : list of float, optional
+        A list of the error criteria ||x^k - y^k||_\infty
     """
     start_time = time.time()
     res = OptimizeResult(x0=x0, tol=tol, tol_internal=tol_internal, nesterov=nesterov, nesterov_ratio=nesterov_ratio)
@@ -238,6 +241,7 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
     w0 = np.ones(m_dims) / m_dims if m_dims > 1 else None
     if return_all:
         allvecs = [x0]
+        all_error_criteria = []
     if nesterov:
         nesterov_tk_old = 1
     for nit in range(1, max_iter + 1):
@@ -259,9 +263,11 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
             if np.all(f(xk) + g(xk) - F_xk_old <= subproblem_result.fun + tol):
                 break
             lr *= decay_rate
+        error_criterion = max(abs(xk - yk))
         if return_all:
             allvecs.append(xk)
-        if max(abs(xk - yk)) < tol:
+            all_error_criteria.append(error_criterion)
+        if error_criterion < tol:
             res.status = 1
             break
         if nesterov:
@@ -285,5 +291,6 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
     res.nit_internal = nit_internal
     if return_all:
         res.allvecs = allvecs
+        res.all_error_criteria = all_error_criteria
     res.execution_time = time.time() - start_time
     return res
