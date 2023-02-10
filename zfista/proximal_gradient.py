@@ -2,15 +2,20 @@ import time
 from warnings import warn
 
 import numpy as np
-from scipy.optimize import (BFGS, Bounds, LinearConstraint, OptimizeResult,
-                            minimize)
+from scipy.optimize import BFGS, Bounds, LinearConstraint, OptimizeResult, minimize
 
 TERMINATION_MESSAGES = {
     0: "The maximum number of function evaluations is exceeded.",
     1: "Termination condition is satisfied.",
 }
 
-COLUMN_NAMES = ['niter', 'nit internal', 'max(abs(xk - yk)))', 'subprob func', 'learning rate']
+COLUMN_NAMES = [
+    "niter",
+    "nit internal",
+    "max(abs(xk - yk)))",
+    "subprob func",
+    "learning rate",
+]
 COLUMN_WIDTHS = [7, 7, 13, 13, 10]
 ITERATION_FORMATS = ["^7", "^7", "^+13.4e", "^+13.4e", "^10.2e"]
 
@@ -96,25 +101,39 @@ def _solve_subproblem(f, g, jac_f, prox_wsum_g, lr, xk_old, yk, w0, tol=1e-12):
         yk_minus_lr_times_wsum_jac_f_yk = yk - lr * wsum_jac_f_yk
         primal_variable = prox_wsum_g(lr * weight, yk_minus_lr_times_wsum_jac_f_yk)
         g_primal_variable = g(primal_variable)
-        fun = -np.inner(weight, g_primal_variable) \
-              - np.linalg.norm(primal_variable - yk_minus_lr_times_wsum_jac_f_yk) ** 2 / 2 / lr \
-              + lr / 2 * np.linalg.norm(wsum_jac_f_yk) ** 2 \
-              - np.inner(weight, f_yk - F_xk_old)
+        fun = (
+            -np.inner(weight, g_primal_variable)
+            - np.linalg.norm(primal_variable - yk_minus_lr_times_wsum_jac_f_yk) ** 2
+            / 2
+            / lr
+            + lr / 2 * np.linalg.norm(wsum_jac_f_yk) ** 2
+            - np.inner(weight, f_yk - F_xk_old)
+        )
         jac = -g_primal_variable - jac_f_yk @ (primal_variable - yk) - f_yk + F_xk_old
         return fun, jac
 
     res = OptimizeResult()
     if m_dims == 1:
         res.x = prox_wsum_g(lr, yk - lr * jac_f_yk.flatten())
-        res.fun = float(jac_f_yk @ (res.x - yk) + g(res.x) + f_yk - F_xk_old + np.linalg.norm(res.x - yk) **2 / 2 / lr)
+        res.fun = float(
+            jac_f_yk @ (res.x - yk)
+            + g(res.x)
+            + f_yk
+            - F_xk_old
+            + np.linalg.norm(res.x - yk) ** 2 / 2 / lr
+        )
         res.nit = 1
     else:
-        res_dual = minimize(fun=_dual_minimized_fun_jac, x0=w0,
-                            method='trust-constr', jac=True,
-                            hess=BFGS(), bounds=Bounds(0, np.inf),
-                            constraints=LinearConstraint(np.ones(m_dims), 1, 1),
-                            options={'gtol': tol, 'xtol': tol, 'barrier_tol': tol}
-                            )
+        res_dual = minimize(
+            fun=_dual_minimized_fun_jac,
+            x0=w0,
+            method="trust-constr",
+            jac=True,
+            hess=BFGS(),
+            bounds=Bounds(0, np.inf),
+            constraints=LinearConstraint(np.ones(m_dims), 1, 1),
+            options={"gtol": tol, "xtol": tol, "barrier_tol": tol},
+        )
         if not res_dual.success:
             warn(res_dual.message)
         res.weight = res_dual.x
@@ -124,10 +143,23 @@ def _solve_subproblem(f, g, jac_f, prox_wsum_g, lr, xk_old, yk, w0, tol=1e-12):
     return res
 
 
-def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol_internal=1e-10,
-                               max_iter=10000, warm_start=False,
-                               decay_rate=0.5, nesterov=False, nesterov_ratio=(0, 0.25),
-                               return_all=False, verbose=False):
+def minimize_proximal_gradient(
+    f,
+    g,
+    jac_f,
+    prox_wsum_g,
+    x0,
+    lr=1,
+    tol=1e-5,
+    tol_internal=1e-10,
+    max_iter=10000,
+    warm_start=False,
+    decay_rate=0.5,
+    nesterov=False,
+    nesterov_ratio=(0, 0.25),
+    return_all=False,
+    verbose=False,
+):
     """Minimization of scalar or vector-valued function::
 
         F(x) := f(x) + g(x)
@@ -225,12 +257,16 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
         A list of the error criteria ||x^k - y^k||_\infty
     """
     start_time = time.time()
-    res = OptimizeResult(x0=x0, tol=tol, tol_internal=tol_internal, nesterov=nesterov, nesterov_ratio=nesterov_ratio)
+    res = OptimizeResult(
+        x0=x0,
+        tol=tol,
+        tol_internal=tol_internal,
+        nesterov=nesterov,
+        nesterov_ratio=nesterov_ratio,
+    )
     if verbose:
-        fmt = ("|"
-               + "|".join(["{{:^{}}}".format(x) for x in COLUMN_WIDTHS])
-               + "|")
-        separators = ['-' * x for x in COLUMN_WIDTHS]
+        fmt = "|" + "|".join(["{{:^{}}}".format(x) for x in COLUMN_WIDTHS]) + "|"
+        separators = ["-" * x for x in COLUMN_WIDTHS]
         print(fmt.format(*COLUMN_NAMES))
         print(fmt.format(*separators))
     xk_old = x0
@@ -247,14 +283,21 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
     for nit in range(1, max_iter + 1):
         F_xk_old = f(xk_old) + g(xk_old)
         while True:
-            subproblem_result = _solve_subproblem(f, g, jac_f, prox_wsum_g, lr, xk_old, yk, w0,
-                                                  tol=tol_internal)
+            subproblem_result = _solve_subproblem(
+                f, g, jac_f, prox_wsum_g, lr, xk_old, yk, w0, tol=tol_internal
+            )
             xk = subproblem_result.x
             nit_internal += subproblem_result.nit
             if w0 is not None and warm_start:
                 w0 = subproblem_result.weight
             if verbose:
-                progress_report = [nit, nit_internal, max(abs(xk - yk)), subproblem_result.fun, lr]
+                progress_report = [
+                    nit,
+                    nit_internal,
+                    max(abs(xk - yk)),
+                    subproblem_result.fun,
+                    lr,
+                ]
                 iteration_format = ["{{:{}}}".format(x) for x in ITERATION_FORMATS]
                 fmt = "|" + "|".join(iteration_format) + "|"
                 print(fmt.format(*progress_report))
@@ -272,7 +315,7 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
             break
         if nesterov:
             a, b = nesterov_ratio
-            nesterov_tk = np.sqrt(nesterov_tk_old ** 2 - a * nesterov_tk_old + b) + 0.5
+            nesterov_tk = np.sqrt(nesterov_tk_old**2 - a * nesterov_tk_old + b) + 0.5
             moment = (nesterov_tk_old - 1) / nesterov_tk
             yk = xk + moment * (xk - xk_old)
             nesterov_tk_old = nesterov_tk
@@ -283,7 +326,7 @@ def minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, lr=1, tol=1e-5, tol
         res.status = 0
     res.x = xk
     res.fun = f(xk) + g(xk)
-    res.success = (res.status == 1)
+    res.success = res.status == 1
     res.message = TERMINATION_MESSAGES[res.status]
     if not res.success:
         warn(res.message)
