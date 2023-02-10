@@ -6,6 +6,6 @@ matplotlib
 line_profiler
 joblib
 scikit-image
-sklearn
+scikit-learn
 PyWavelets
 SciencePlots
