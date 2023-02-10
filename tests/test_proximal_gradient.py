@@ -36,7 +36,7 @@ class TestProximalGradient(unittest.TestCase):
         A = np.array([[0], [0], [0]])
         b = np.array([0, 0, 0])
         x0 = np.random.random(1)
-        l1_ratio = .1
+        l1_ratio = 0.1
 
         def f(x):
             return np.linalg.norm(A @ x - b) ** 2 / 6
@@ -51,7 +51,9 @@ class TestProximalGradient(unittest.TestCase):
             return _soft_threshold(x, l1_ratio * weight)
 
         res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
-        res_nesterov = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, nesterov=True)
+        res_nesterov = minimize_proximal_gradient(
+            f, g, jac_f, prox_wsum_g, x0, nesterov=True
+        )
         assert_array_almost_equal(res.x, [0], decimal=3)
         assert_array_almost_equal(res_nesterov.x, [0], decimal=3)
 
@@ -63,8 +65,9 @@ class TestProximalGradient(unittest.TestCase):
         A = np.array([[-1], [0], [1]])
         b = np.array([-1, 0, 1])
         x0 = np.random.random(1)
-        l1_ratios = [1e-8, .1, .5, 1]
+        l1_ratios = [1e-8, 0.1, 0.5, 1]
         for l1_ratio in l1_ratios:
+
             def f(x):
                 return np.linalg.norm(A @ x - b) ** 2 / 6
 
@@ -78,16 +81,18 @@ class TestProximalGradient(unittest.TestCase):
                 return _soft_threshold(x, l1_ratio * weight)
 
             res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
-            res_nesterov = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, nesterov=True)
+            res_nesterov = minimize_proximal_gradient(
+                f, g, jac_f, prox_wsum_g, x0, nesterov=True
+            )
             if l1_ratio == 1e-8:
                 assert_array_almost_equal(res.x, [1], decimal=3)
                 assert_array_almost_equal(res_nesterov.x, [1], decimal=3)
-            if l1_ratio == .1:
-                assert_array_almost_equal(res.x, [.85], decimal=3)
-                assert_array_almost_equal(res_nesterov.x, [.85], decimal=3)
-            if l1_ratio == .5:
-                assert_array_almost_equal(res.x, [.25], decimal=3)
-                assert_array_almost_equal(res_nesterov.x, [.25], decimal=3)
+            if l1_ratio == 0.1:
+                assert_array_almost_equal(res.x, [0.85], decimal=3)
+                assert_array_almost_equal(res_nesterov.x, [0.85], decimal=3)
+            if l1_ratio == 0.5:
+                assert_array_almost_equal(res.x, [0.25], decimal=3)
+                assert_array_almost_equal(res_nesterov.x, [0.25], decimal=3)
             if l1_ratio == 1:
                 assert_array_almost_equal(res.x, [0], decimal=3)
                 assert_array_almost_equal(res_nesterov.x, [0], decimal=3)
@@ -100,8 +105,9 @@ class TestProximalGradient(unittest.TestCase):
         A = np.array([[-1], [0], [1]])
         b = np.array([-1, 0, 1])
         x0 = np.random.random(1)
-        l1_ratios = [1e-8, .1, .5, 1]
+        l1_ratios = [1e-8, 0.1, 0.5, 1]
         for l1_ratio in l1_ratios:
+
             def f(x):
                 val = np.linalg.norm(A @ x - b) ** 2 / 6
                 return np.array([val, val])
@@ -118,16 +124,18 @@ class TestProximalGradient(unittest.TestCase):
                 return _soft_threshold(x, l1_ratio * weight.sum())
 
             res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
-            res_nesterov = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, nesterov=True)
+            res_nesterov = minimize_proximal_gradient(
+                f, g, jac_f, prox_wsum_g, x0, nesterov=True
+            )
             if l1_ratio == 1e-8:
                 assert_array_almost_equal(res.x, [1], decimal=3)
                 assert_array_almost_equal(res_nesterov.x, [1], decimal=3)
-            if l1_ratio == .1:
-                assert_array_almost_equal(res.x, [.85], decimal=3)
-                assert_array_almost_equal(res_nesterov.x, [.85], decimal=3)
-            if l1_ratio == .5:
-                assert_array_almost_equal(res.x, [.25], decimal=3)
-                assert_array_almost_equal(res_nesterov.x, [.25], decimal=3)
+            if l1_ratio == 0.1:
+                assert_array_almost_equal(res.x, [0.85], decimal=3)
+                assert_array_almost_equal(res_nesterov.x, [0.85], decimal=3)
+            if l1_ratio == 0.5:
+                assert_array_almost_equal(res.x, [0.25], decimal=3)
+                assert_array_almost_equal(res_nesterov.x, [0.25], decimal=3)
             if l1_ratio == 1:
                 assert_array_almost_equal(res.x, [0], decimal=3)
                 assert_array_almost_equal(res_nesterov.x, [0], decimal=3)
@@ -136,7 +144,7 @@ class TestProximalGradient(unittest.TestCase):
         A = np.array([[0], [0], [0]])
         b = np.array([0, 0, 0])
         x0 = np.random.random(1)
-        l1_ratio = .1
+        l1_ratio = 0.1
 
         def f(x):
             return np.linalg.norm(A @ x - b) ** 2 / 6
@@ -151,6 +159,5 @@ class TestProximalGradient(unittest.TestCase):
             return _soft_threshold(x, l1_ratio * weight)
 
         res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, return_all=True)
-        self.assertIn('allvecs', res)
-        self.assertIn('all_error_criteria', res)
-
+        self.assertIn("allvecs", res)
+        self.assertIn("all_error_criteria", res)
