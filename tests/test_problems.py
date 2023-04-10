@@ -1,24 +1,8 @@
 import unittest
 
 import numpy as np
-from zfista.problems import (
-    FDS,
-    FDS_CONSTRAINED,
-    JOS1,
-    JOS1_L1,
-    SD,
-    Problem,
-    _soft_threshold,
-)
 
-
-class TestSoftThreshold(unittest.TestCase):
-    def test_soft_threshold(self):
-        x = np.array([-3, -2, -1, 0, 1, 2, 3])
-        thresh = 1.5
-        expected = np.array([-1.5, -0.5, 0, 0, 0, 0.5, 1.5])
-        result = _soft_threshold(x, thresh)
-        np.testing.assert_almost_equal(result, expected)
+from zfista.problems import FDS, FDS_CONSTRAINED, JOS1, JOS1_L1, SD, Problem
 
 
 class TestProblem(unittest.TestCase):
@@ -69,9 +53,9 @@ class TestJOS1_L1(unittest.TestCase):
         np.testing.assert_almost_equal(result, expected)
 
     def test_prox_wsum_g(self):
-        weight = np.array([1, 2])
+        weight = np.array([0.5, 0.5])
         x = np.array([3, 4, 5, 6, 7])
-        expected = np.array([2.6, 3.6, 4.6, 5.6, 6.6])
+        expected = np.array([2.85, 3.85, 4.85, 5.85, 6.85])
         result = self.jos1_l1.prox_wsum_g(weight, x)
         np.testing.assert_almost_equal(result, expected)
 
@@ -82,14 +66,27 @@ class TestSD(unittest.TestCase):
 
     def test_f(self):
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
-        expected = np.array([7, 0])
+        expected = np.array([7, 8])
         result = self.sd.f(x)
         np.testing.assert_almost_equal(result, expected)
 
     def test_jac_f(self):
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
-        expected = np.array([[2, np.sqrt(2), np.sqrt(2), 1], [0, 0, 0, 0]])
+        expected = np.array([[2, np.sqrt(2), np.sqrt(2), 1], [-2, -np.sqrt(2), -np.sqrt(2), -2]])
         result = self.sd.jac_f(x)
+        np.testing.assert_almost_equal(result, expected)
+
+    def test_g(self):
+        x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
+        expected = np.array([0, 0])
+        result = self.sd.g(x)
+        np.testing.assert_almost_equal(result, expected)
+
+    def test_prox_wsum_g(self):
+        weight = np.array([0.5, 0.5])
+        x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
+        expected = np.array([1, np.sqrt(2), np.sqrt(2), 1])
+        result = self.sd.prox_wsum_g(weight, x)
         np.testing.assert_almost_equal(result, expected)
 
 
@@ -138,7 +135,7 @@ class TestFDS_CONSTRAINED(unittest.TestCase):
         np.testing.assert_almost_equal(result, expected)
 
     def test_prox_wsum_g(self):
-        weight = 1.0
+        weight = np.array([1/3, 1/3, 1/3])
         x = np.array([-3, -1, 0, 1, 3])
         expected = np.array([0, 0, 0, 1, 3])
         result = self.fds_constrained.prox_wsum_g(weight, x)
