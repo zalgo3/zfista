@@ -35,12 +35,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ matrix.config.pip }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.cfg') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install .
       - name: Test
         run: python -m unittest discover
