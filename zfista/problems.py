@@ -1,9 +1,10 @@
+import jax
 import numpy as np
+from jaxopt.prox import prox_lasso
+from jaxopt.projection import projection_non_negative, projection_box
 from scipy.optimize import root_scalar
 
-
-def _soft_threshold(x, thresh):
-    return np.where(np.abs(x) <= thresh, 0, x - thresh * np.sign(x))
+jax.config.update("jax_enable_x64", True)
 
 
 class Problem:
@@ -95,8 +96,8 @@ class JOS1_L1(JOS1):
 
     def prox_wsum_g(self, weight, x):
         return (
-            _soft_threshold(
-                _soft_threshold(
+            prox_lasso(
+                prox_lasso(
                     x + weight[1] * self.l1_ratios[1], weight[0] * self.l1_ratios[0]
                 )
                 - weight[1] * self.l1_ratios[1]
@@ -113,7 +114,7 @@ class SD(Problem):
     We solve problems with the objective functions::
 
         f_1(x) = 2 x_1 + \\sqrt{2} x_2 + \\sqrt{2} x_3 + x_4, g_1(x) = ind([lb, ub]),
-        f_2(x) = 0, g_2(x) = 2 / x_1 + 2 \\sqrt{2} / x_2 + 2 \\sqrt{2} / x_3 + x_4 + ind([lb, ub]),
+        f_2(x) = 2 / x_1 + 2 \\sqrt{2} / x_2 + 2 \\sqrt{2} / x_3 + x_4, g_2(x) = ind([lb, ub]),
 
     where ind represents the indicator function, and [lb, ub] is upper and lower bound::
 
@@ -145,35 +146,23 @@ class SD(Problem):
 
     def f(self, x):
         f1 = 2 * x[0] + np.sqrt(2) * x[1] + np.sqrt(2) * x[2] + x[3]
-        f2 = 0
+        f2 = 2 / x[0] + 2 * np.sqrt(2) / x[1] + 2 * np.sqrt(2) / x[2] + 2 / x[3]
         return np.array([f1, f2])
 
     def jac_f(self, x):
         jac_f1 = np.array([2, np.sqrt(2), np.sqrt(2), 1])
-        jac_f2 = np.zeros_like(jac_f1)
+        jac_f2 = np.array([- 2 / x[0] ** 2, - 2 * np.sqrt(2) / x[1] ** 2, - 2 * np.sqrt(2) / x[2] ** 2, - 2 / x[3] ** 2])
         return np.vstack((jac_f1, jac_f2))
 
     def g(self, x):
         if np.any(x < self.lb) or np.any(x > self.ub):
             g1 = g2 = np.inf
         else:
-            g1 = 0
-            g2 = 2 / x[0] + 2 * np.sqrt(2) / x[1] + 2 * np.sqrt(2) / x[2] + 2 / x[3]
+            g1 = g2 = 0
         return np.array([g1, g2])
 
     def prox_wsum_g(self, weight, x):
-        ret = np.empty(self.n_dims)
-        constants = np.array([2, 2 * np.sqrt(2), 2 * np.sqrt(2), 2])
-        for i in range(self.n_dims):
-            ret[i] = root_scalar(
-                lambda z: z**3 - x[i] * z**2 - constants[i] * weight[1],
-                x0=x[i],
-                fprime=lambda z: 3 * z**2 - 2 * x[i] * z,
-                fprime2=lambda z: 6 * z - 2 * x[i],
-            ).root
-        ret = np.where(ret < self.lb, self.lb, ret)
-        ret = np.where(ret > self.ub, self.ub, ret)
-        return ret
+        return projection_box(x, (self.lb, self.ub))
 
 
 class FDS(Problem):
@@ -236,4 +225,4 @@ class FDS_CONSTRAINED(FDS):
         return np.array([g1, g2, g3])
 
     def prox_wsum_g(self, weight, x):
-        return np.maximum(x, 0)
+        return projection_non_negative(x)

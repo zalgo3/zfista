@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from sklearn.base import RegressorMixin
 from sklearn.linear_model._base import LinearModel
+
 from zfista import minimize_proximal_gradient
 
 
