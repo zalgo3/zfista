@@ -18,8 +18,10 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
+        config:
+          - { os: ubuntu-latest, pip: ~/.cache/pip }
+          - { os: macos-latest, pip: ~/Library/Caches/pip }
         python: ["3.7", "3.8", "3.9", "3.10"]
-        os: [ubuntu-latest]
     name: "${{ matrix.config.os }} Python ${{ matrix.python }}"
     steps:
       - uses: actions/checkout@v3
