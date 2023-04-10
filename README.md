@@ -37,15 +37,6 @@ You can run some examples on jupyter notebooks.
 jupyter notebook
 ```
 
-## For developers
-To set up development environment, run
-```sh
-python -m venv venv
-source venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
 ## Testing
 You can run all tests by
 ```sh
