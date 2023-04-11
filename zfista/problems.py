@@ -170,7 +170,14 @@ class SD(Problem):
 
     def jac_f(self, x):
         jac_f1 = np.array([2, np.sqrt(2), np.sqrt(2), 1])
-        jac_f2 = np.array([- 2 / x[0] ** 2, - 2 * np.sqrt(2) / x[1] ** 2, - 2 * np.sqrt(2) / x[2] ** 2, - 2 / x[3] ** 2])
+        jac_f2 = np.array(
+            [
+                -2 / x[0] ** 2,
+                -2 * np.sqrt(2) / x[1] ** 2,
+                -2 * np.sqrt(2) / x[2] ** 2,
+                -2 / x[3] ** 2,
+            ]
+        )
         return np.vstack((jac_f1, jac_f2))
 
     def g(self, x):
