@@ -17,6 +17,8 @@ $$\min_{x \in \mathbf{R}^n} \quad F(x) \coloneqq f(x) + g(x),$$
 where $f$ and $g$ are scalar or vector valued function, $f$ is continuously differentiable, $g$ is closed, proper and convex.
 Note that FISTA also requires $f$ to be convex.
 
+- Documentation: https://zalgo3.github.io/zfista/
+
 ## Requirements
 - Python 3.7 or later
 
