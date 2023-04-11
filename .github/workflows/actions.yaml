@@ -54,6 +54,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: [unittest, lint]
+    name: Test docs
     steps:
       - id: deployment
         uses: sphinx-notes/pages@v3
