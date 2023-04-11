@@ -127,8 +127,8 @@ class SD(Problem):
     .. math::
 
         \begin{gathered}
-        f_1(x) = 2 x_1 + \sqrt{2} x_2 + \sqrt{2} x_3 + x_4, g_1(x) = \ind_{[lb, ub]}(x), \\
-        f_2(x) = 2 / x_1 + 2 \sqrt{2} / x_2 + 2 \sqrt{2} / x_3 + x_4, g_2(x) = \ind_{[lb, ub]}(x),
+        f_1(x) = 2 x_1 + \sqrt{2} x_2 + \sqrt{2} x_3 + x_4, g_1(x) = \ind_{[L, U]}(x), \\
+        f_2(x) = 2 / x_1 + 2 \sqrt{2} / x_2 + 2 \sqrt{2} / x_3 + x_4, g_2(x) = \ind_{[L, U]}(x),
         \end{gathered}
 
     where :math:`\ind` represents the indicator function, and :math:`[L, U]` is upper and lower bound
