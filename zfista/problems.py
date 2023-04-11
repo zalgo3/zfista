@@ -13,9 +13,11 @@ class Problem:
 
     In all test problems, each objective function can be written as
 
+    .. math::
+
         F_i(x) = f_i(x) + g_i(x),
 
-    where f_i is convex and differentiable and g_i is closed, proper and convex.
+    where :math:`f_i` is convex and differentiable and :math:`g_i` is closed, proper and convex.
 
     Parameters
     ----------
@@ -38,17 +40,22 @@ class Problem:
 
 
 class JOS1(Problem):
-    """n_dims = 5 (default), m_dims = 2
+    r"""n_dims = 5 (default), m_dims = 2
 
-    We solve problems with the objective functions::
+    We solve problems with the objective functions
 
-        f_1(x) = (1 / n_dims) * \\sum_i x_i^2,          g_1(x) = 0,
-        f_2(x) = (1 / n_dims) * \\sum_i (x_i - 2)^2,    g_2(x) = 0.
+    .. math::
 
-    Each gradient of f_i can be written as::
+        \begin{gathered}
+        f_1(x) = (1 / n) \sum_i x_i^2,          g_1(x) = 0, \\
+        f_2(x) = (1 / n) \sum_i (x_i - 2)^2,    g_2(x) = 0.
+        \end{gathered}
 
-        \\nabla f_1(x) = (2 / n_dims) * x,
-        \\nabla f_2(x) = (2 / n_dims) * (x - 2).
+    Each gradient of :math:`f_i` can be written as
+
+    .. math::
+
+        \nabla f_1(x) = (2 / n) x, \nabla f_2(x) = (2 / n) (x - 2).
 
     Reference: Jin, Y., Olhofer, M., Sendhoff, B.: Dynamic weighted aggregation for evolutionary
     multi-objective optimization: Why does it work and how? In: GECCO’01 Proceedings of the 3rd
@@ -72,15 +79,19 @@ class JOS1(Problem):
 class JOS1_L1(JOS1):
     """n_dims = 5 (default), m_dims = 2
 
-    We solve the modified version of `JOS1`, where::
+    We solve the modified version of `JOS1`, where
 
-        g_1(x) = r_1 * ||x||_1, g_2(x) = r_2 * ||x - 1||_1.
+    .. math::
 
-    The proximal operator of the weighted sum of g_i can be written as::
+        g_1(x) = r_1 \|x\|_1, g_2(x) = r_2 \|x - 1\|_1.
 
-        prox_{\\sum_i w_i g_i}(x) = S_{r_1 w_1}(S_{r_0 w_0}(x + r_1 w_1) - r_1 w_1 - 1) + 1,
+    The proximal operator of the weighted sum of g_i can be written as
 
-    where S is the soft-thresholding operator.
+    .. math::
+
+        \prox_{\sum_i w_i g_i}(x) = S_{r_1 w_1}(S_{r_0 w_0}(x + r_1 w_1) - r_1 w_1 - 1) + 1,
+
+    where :math:`S` is the soft-thresholding operator.
     """
 
     def __init__(self, n_dims=5, m_dims=2, l1_ratios=None):
@@ -109,20 +120,28 @@ class JOS1_L1(JOS1):
 
 
 class SD(Problem):
-    """n_dims = 4, m_dims = 2
+    r"""n_dims = 4, m_dims = 2
 
-    We solve problems with the objective functions::
+    We solve problems with the objective functions
 
-        f_1(x) = 2 x_1 + \\sqrt{2} x_2 + \\sqrt{2} x_3 + x_4, g_1(x) = ind([lb, ub]),
-        f_2(x) = 2 / x_1 + 2 \\sqrt{2} / x_2 + 2 \\sqrt{2} / x_3 + x_4, g_2(x) = ind([lb, ub]),
+    .. math::
 
-    where ind represents the indicator function, and [lb, ub] is upper and lower bound::
+        \begin{gathered}
+        f_1(x) = 2 x_1 + \sqrt{2} x_2 + \sqrt{2} x_3 + x_4, g_1(x) = \ind_{[lb, ub]}(x), \\
+        f_2(x) = 2 / x_1 + 2 \sqrt{2} / x_2 + 2 \sqrt{2} / x_3 + x_4, g_2(x) = \ind_{[lb, ub]}(x),
+        \end{gathered}
 
-        lb = [1, \\sqrt{2}, \\sqrt{2}, 1], ub = [3, 3, 3, 3].
+    where :math:`\ind` represents the indicator function, and :math:`[L, U]` is upper and lower bound
 
-    Each gradient of f_i can be written as::
+    .. math::
 
-        \\nabla f_1(x) = [1, \\sqrt{2}, \\sqrt{2}, 1], \\nabla f_2(x) = 0.
+        L = [1, \sqrt{2}, \sqrt{2}, 1], U = [3, 3, 3, 3].
+
+    Each gradient of f_i can be written as
+
+    .. math::
+
+        \nabla f_1(x) = [1, \sqrt{2}, \sqrt{2}, 1], \nabla f_2(x) = 0.
 
     Since g_i is separable in the effective domain, the proximal operator of the weighted sum of
     g_i can be computed by the weighted sum of the proximal operator of each g_i.
@@ -166,19 +185,27 @@ class SD(Problem):
 
 
 class FDS(Problem):
-    """n_dims = 10 (default), m_dims = 3
+    r"""n_dims = 10 (default), m_dims = 3
 
-    We solve problems with the objective functions::
+    We solve problems with the objective functions
 
-        f_1(x) = \\sum_i i (x_i - i)^4 / n_dims^2,                               g_1(x) = 0,
-        f_2(x) = exp(\\sum_i x_i / n_dims) + ||x||^2,                            g_2(x) = 0,
-        f_3(x) = \\sum_i i (n_dims - i + 1) exp(-x_i) / (n_dims * (n_dims + 1)), g_3(x) = 0.
+    .. math::
 
-    Each gradient of f_i can be written as::
+        \begin{gathered}
+        f_1(x) = \sum_i i (x_i - i)^4 / n^2,                               g_1(x) = 0, \\
+        f_2(x) = \exp(\sum_i x_i / n) + \|x\|^2,                            g_2(x) = 0, \\
+        f_3(x) = \sum_i i (n - i + 1) \exp(-x_i) / (n (n + 1)), g_3(x) = 0.
+        \end{gathered}
 
-        \\nabla f_1(x) = 4 / n_dims^2 * \\sum_i i (x_i - i)^3,
-        \\nabla f_2(x) = exp(\\sum_i x_i / n_dims) / n_dims + 2 * x,
-        \\nabla f_3(x) = - [i (n_dims - i + 1) exp(-x_i) / (n_dims * (n_dims + 1))]_i
+    Each gradient of :math:`f_i` can be written as
+
+    .. math::
+
+        \begin{gathered}
+        \nabla f_1(x) = 4 / n^2 \sum_i i (x_i - i)^3, \\
+        \nabla f_2(x) = \exp(\sum_i x_i / n) / n + 2 x, \\
+        \nabla f_3(x) = - [i (n - i + 1) \exp(-x_i) / (n (n + 1))]_i
+        \end{gathered}
 
     Reference: Fliege, J., Graña Drummond, L.M., Svaiter, B.F.: Newton’s method for multiobjective
     optimization. SIAM J. Optim. 20(2), 602–626 (2009)
@@ -203,15 +230,15 @@ class FDS(Problem):
 
 
 class FDS_CONSTRAINED(FDS):
-    """n_dims = 10 (default), m_dims = 3
+    r"""n_dims = 10 (default), m_dims = 3
 
-    We solve the modified version of `FDS`, where::
+    We solve the modified version of `FDS`, where :math:`g_1(x) = g_2(x) = g_3(x)` is the indicator function of the nonnegative orthant.
 
-        g_1(x) = g_2(x) = g_3(x) is the indicator function of the nonnegative orthant.
+    The proximal operator of the weighted sum of g_i can be written as
 
-    The proximal operator of the weighted sum of g_i can be written as::
+    .. math::
 
-        prox_{\\sum_i w_i g_i}(x) = max(x, -2).
+        \prox_{\sum_i w_i g_i}(x) = \max(x, -2).
     """
 
     def __init__(self, n_dims=10, m_dims=3):
