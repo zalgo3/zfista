@@ -168,7 +168,7 @@ def minimize_proximal_gradient(
     return_all=False,
     verbose=False,
 ):
-    """Minimization of scalar or vector-valued function
+    r"""Minimization of scalar or vector-valued function
 
     .. math::
 
@@ -190,12 +190,12 @@ def minimize_proximal_gradient(
             ``g(x) -> float or array_like, shape (n_dims,)``
 
     jac_f : callable
-        A function that returns the Jacobian matrix of f.
+        A function that returns the Jacobian matrix of :math:`f`.
 
             ``jac_f(x) -> array_like, shape (m_dims, n_dims)``
 
     prox_wsum_g : callable
-        Proximal operator of the weighted sum of g_i.
+        Proximal operator of the weighted sum of :math:`g_i`.
 
             ``prox_wsum_g(weight, x) -> array_like, shape (n_dims,)``
 
@@ -210,7 +210,7 @@ def minimize_proximal_gradient(
         value) of the search direction and continues until it is greater than ``tol``.
 
     tol_internal : float, default=1e-12
-        The tolerance used in the solver (`scipy.optimize.minimize(method='trust-constr')`) for
+        The tolerance used in the solver (``scipy.optimize.minimize(method='trust-constr')``) for
         the subproblem.
 
     max_iter : int, default=10000
@@ -226,11 +226,11 @@ def minimize_proximal_gradient(
         If True, enable Nesterov's acceleration.
 
     nesterov_ratio : tuple of floats (a, b), default=(0, 0.25)
-        Coefficients used for updating stepsize: t_{k + 1} = \\sqrt{t_k^2 - a * t_k + b} + 0.5
-        If `nesterov` is False, then `nesterov_ratio` will be ignored.
+        Coefficients used for updating stepsize: :math:`t_{k + 1} = \sqrt{t_k^2 - a t_k + b} + 0.5`
+        If ``nesterov`` is ``False``, then ``nesterov_ratio`` will be ignored.
 
     return_all : bool, default=False
-        If True, return lists of the sequence {x^k} and the error criteria ||x^k - y^k||_\infty.
+        If True, return lists of the sequence {x^k} and the error criteria :math:`\|x^k - y^k\|_\infty`.
 
     verbose : bool, default=False
         If True, display progress during iterations.
@@ -261,10 +261,10 @@ def minimize_proximal_gradient(
         Total execution time.
 
     allvecs : list of array, optional
-        A list of the sequence {x^k}
+        A list of the sequence :math:`\{x^k\}`
 
     all_error_criteria : list of float, optional
-        A list of the error criteria ||x^k - y^k||_\infty
+        A list of the error criteria :math:`\|x^k - y^k||_\infty`
     """
     start_time = time.time()
     res = OptimizeResult(
