@@ -21,22 +21,30 @@ ITERATION_FORMATS = ["^7", "^7", "^+13.4e", "^+13.4e", "^10.2e"]
 
 
 def _solve_subproblem(f, g, jac_f, prox_wsum_g, lr, xk_old, yk, w0, tol=1e-12):
-    """Solve the subproblem to get x^k that minimizes the objective function::
+    r"""Solve the subproblem to get x^k that minimizes the objective function
 
-        s + 1 / (2 * lr) * ||x - y^k||^2
+    .. math::
 
-    where::
+        s + 1 / (2 * lr) * \|x - y^k\|^2
 
-        <\\nabla f_i(y^k), (x - y^k)> + g_i(x) + f_i(y^k) - F_i(x^{k - 1}) <= s.
+    where
 
-    We solve the above problem by solving its dual that minimizes::
+    .. math::
 
-        \\inf_x (\\sum_i w_i g_i(x) + ||x - y^k + lr * \\sum_i w_i \\nabla f_i(y^k)||^2 / (2 * lr))
-            - lr / 2 * ||\\sum_i w_i \\nabla f_i(y^k)||^2 + \\sum_i w_i (f_i(y^k) - F_i(x^{k - 1}))
+        <\nabla f_i(y^k), (x - y^k)> + g_i(x) + f_i(y^k) - F_i(x^{k - 1}) <= s.
 
-    where::
+    We solve the above problem by solving its dual that minimizes
 
-        \\sum_i w_i = 1, w >= 0
+    .. math::
+
+        \inf_x (\sum_i w_i g_i(x) + \|x - y^k + lr * \sum_i w_i \nabla f_i(y^k)\|^2 / (2 * lr))
+            - lr / 2 * \|\sum_i w_i \nabla f_i(y^k)\|^2 + \sum_i w_i (f_i(y^k) - F_i(x^{k - 1}))
+
+    where
+
+    .. math::
+
+        \sum_i w_i = 1, w >= 0
 
     by using `scipy.optimize.minimize('method'='trust-constr')'.
 
@@ -160,11 +168,13 @@ def minimize_proximal_gradient(
     return_all=False,
     verbose=False,
 ):
-    """Minimization of scalar or vector-valued function::
+    """Minimization of scalar or vector-valued function
+
+    .. math::
 
         F(x) := f(x) + g(x)
 
-    where f_i is convex and continuously differentiable and g_i is closed, proper and convex
+    where :math:`f_i` is convex and continuously differentiable and :math:`g_i` is closed, proper and convex
     by using the proximal gradient method.
 
     Parameters
