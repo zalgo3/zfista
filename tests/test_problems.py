@@ -72,7 +72,9 @@ class TestSD(unittest.TestCase):
 
     def test_jac_f(self):
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
-        expected = np.array([[2, np.sqrt(2), np.sqrt(2), 1], [-2, -np.sqrt(2), -np.sqrt(2), -2]])
+        expected = np.array(
+            [[2, np.sqrt(2), np.sqrt(2), 1], [-2, -np.sqrt(2), -np.sqrt(2), -2]]
+        )
         result = self.sd.jac_f(x)
         np.testing.assert_almost_equal(result, expected)
 
@@ -135,7 +137,7 @@ class TestFDS_CONSTRAINED(unittest.TestCase):
         np.testing.assert_almost_equal(result, expected)
 
     def test_prox_wsum_g(self):
-        weight = np.array([1/3, 1/3, 1/3])
+        weight = np.array([1 / 3, 1 / 3, 1 / 3])
         x = np.array([-3, -1, 0, 1, 3])
         expected = np.array([0, 0, 0, 1, 3])
         result = self.fds_constrained.prox_wsum_g(weight, x)
