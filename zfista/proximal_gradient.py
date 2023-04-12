@@ -230,7 +230,7 @@ def minimize_proximal_gradient(
         If ``nesterov`` is ``False``, then ``nesterov_ratio`` will be ignored.
 
     return_all : bool, default=False
-        If True, return lists of the sequence {x^k} and the error criteria :math:`\|x^k - y^k\|_\infty`.
+        If True, return lists of the sequence :math:`\{x^k\}` and the error criteria :math:`\|x^k - y^k\|_\infty`.
 
     verbose : bool, default=False
         If True, display progress during iterations.
