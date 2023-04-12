@@ -1,15 +1,15 @@
 import unittest
 
+import jax
 import numpy as np
+from jaxopt.prox import prox_lasso
 from numpy.testing import assert_array_almost_equal
 from sklearn.base import RegressorMixin
 from sklearn.linear_model._base import LinearModel
 
 from zfista import minimize_proximal_gradient
 
-
-def _soft_threshold(x, thresh):
-    return np.where(np.abs(x) <= thresh, 0, x - thresh * np.sign(x))
+jax.config.update("jax_enable_x64", True)
 
 
 def build_dataset(n_samples=50, n_features=200, n_informative_features=10, n_targets=1):
@@ -48,7 +48,7 @@ class TestProximalGradient(unittest.TestCase):
             return A.T @ (A @ x - b) / 3
 
         def prox_wsum_g(weight, x):
-            return _soft_threshold(x, l1_ratio * weight)
+            return prox_lasso(x, l1_ratio * weight)
 
         res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
         res_nesterov = minimize_proximal_gradient(
@@ -78,7 +78,7 @@ class TestProximalGradient(unittest.TestCase):
                 return A.T @ (A @ x - b) / 3
 
             def prox_wsum_g(weight, x):
-                return _soft_threshold(x, l1_ratio * weight)
+                return prox_lasso(x, l1_ratio * weight)
 
             res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
             res_nesterov = minimize_proximal_gradient(
@@ -121,7 +121,7 @@ class TestProximalGradient(unittest.TestCase):
                 return np.vstack([grad_fi, grad_fi])
 
             def prox_wsum_g(weight, x):
-                return _soft_threshold(x, l1_ratio * weight.sum())
+                return prox_lasso(x, l1_ratio * weight.sum())
 
             res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0)
             res_nesterov = minimize_proximal_gradient(
@@ -156,7 +156,7 @@ class TestProximalGradient(unittest.TestCase):
             return A.T @ (A @ x - b) / 3
 
         def prox_wsum_g(weight, x):
-            return _soft_threshold(x, l1_ratio * weight)
+            return prox_lasso(x, l1_ratio * weight)
 
         res = minimize_proximal_gradient(f, g, jac_f, prox_wsum_g, x0, return_all=True)
         self.assertIn("allvecs", res)
