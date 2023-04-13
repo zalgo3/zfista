@@ -3,6 +3,7 @@ import numpy as np
 from jaxopt.prox import prox_lasso
 from jaxopt.projection import projection_non_negative, projection_box
 from scipy.optimize import root_scalar
+from zfista import minimize_proximal_gradient
 
 jax.config.update("jax_enable_x64", True)
 
@@ -32,11 +33,27 @@ class Problem:
         self.n_dims = n_dims
         self.m_dims = m_dims
 
+    def f(self, x):
+        pass
+
+    def jac_f(self, x):
+        pass
+
     def g(self, x):
         return np.zeros(self.m_dims)
 
     def prox_wsum_g(self, weight, x):
         return x
+
+    def minimize_proximal_gradient(self, x0, **kwargs):
+        return minimize_proximal_gradient(
+            self.f,
+            self.g,
+            self.jac_f,
+            self.prox_wsum_g,
+            x0,
+            **kwargs,
+        )
 
 
 class JOS1(Problem):
