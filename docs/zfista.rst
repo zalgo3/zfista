@@ -4,6 +4,14 @@ zfista package
 Submodules
 ----------
 
+zfista.metrics module
+---------------------
+
+.. automodule:: zfista.metrics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 zfista.problems module
 ----------------------
 
