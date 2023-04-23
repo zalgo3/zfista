@@ -4,7 +4,7 @@ import json
 import os
 import pickle
 from logging import INFO, StreamHandler, getLogger
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import joblib
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ plt.style.use(["science", "bright"])
 
 
 @contextlib.contextmanager
-def tqdm_joblib(total: Optional[int] = None, **kwargs) -> Callable:
+def tqdm_joblib(total: Optional[int] = None, **kwargs) -> Generator:
     pbar = tqdm(total=total, miniters=1, smoothing=0, **kwargs)
 
     class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
@@ -251,7 +251,7 @@ def save_results(
     res_normal: List[OptimizeResult],
     res_acc: List[OptimizeResult],
     res_acc_deprecated: List[OptimizeResult],
-    metrics: Dict[str, float],
+    metrics: Dict[str, Dict[str, float]],
 ) -> None:
     logger.info("Saving results...")
     directory = create_directory(problem, experiment_name)
@@ -305,7 +305,7 @@ def benchmark(
     overwrite: bool = False,
     verbose: bool = False,
 ) -> Tuple[
-    List[OptimizeResult], List[OptimizeResult], List[OptimizeResult], Dict[str, float]
+    List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]
 ]:
     directory = create_directory(problem, experiment_name)
 
@@ -358,7 +358,7 @@ def benchmark(
 def generate_performance_profiles(
     performance_ratios: Dict[str, Dict[str, List[float]]]
 ) -> Dict[str, Dict[str, Tuple[np.ndarray, np.ndarray]]]:
-    performance_profiles = {}
+    performance_profiles: Dict[str, Dict[str, Tuple[np.ndarray, np.ndarray]]] = {}
     for ratio_key, algorithm_ratios in performance_ratios.items():
         performance_profiles[ratio_key] = {}
         for algorithm, ratios in algorithm_ratios.items():
@@ -409,7 +409,7 @@ def main(overwrite=False, verbose=False) -> None:
     problems = []
 
     for problem_class in problem_classes:
-        constructor_params = inspect.signature(problem_class.__init__).parameters
+        constructor_params = inspect.signature(problem_class.__init__).parameters  # type: ignore
         if "n_features" in constructor_params:
             for n_features in n_features_list:
                 problem = problem_class(n_features=n_features)
@@ -448,14 +448,14 @@ def main(overwrite=False, verbose=False) -> None:
         "TRIDIA": {"low": -1, "high": 1},
         "LinearFunctionRank1": {"low": -1, "high": 1},
     }
-    performance_ratios = {}
+    performance_ratios: Dict[str, Dict[str, List[float]]] = {}
 
     df_rows = []
 
     for problem in problems:
         logger.info(f"Running benchmark for {problem.name}...")
         problem_params = problem_parameters.get(type(problem).__name__)
-        low, high = problem_params.get("low"), problem_params.get("high")
+        low, high = problem_params.get("low"), problem_params.get("high")  # type: ignore
         res_normal, res_acc, res_acc_deprecated = benchmark(
             problem,
             experiment_name,

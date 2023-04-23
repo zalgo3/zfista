@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Tuple
+from typing import Tuple
 
 import jax
 import numpy as np
@@ -44,10 +44,10 @@ class TestProximalGradient(unittest.TestCase):
         x0 = np.random.random(1)
         l1_ratio = 0.1
 
-        def f(x: np.ndarray) -> np.floating[Any]:
+        def f(x: np.ndarray) -> np.floating:
             return np.linalg.norm(A @ x - b) ** 2 / 6
 
-        def g(x: np.ndarray) -> np.floating[Any]:
+        def g(x: np.ndarray) -> np.floating:
             return l1_ratio * np.linalg.norm(x, ord=1)
 
         def jac_f(x: np.ndarray) -> np.ndarray:
@@ -74,10 +74,10 @@ class TestProximalGradient(unittest.TestCase):
         l1_ratios = [1e-8, 0.1, 0.5, 1]
         for l1_ratio in l1_ratios:
 
-            def f(x: np.ndarray) -> np.floating[Any]:
+            def f(x: np.ndarray) -> np.floating:
                 return np.linalg.norm(A @ x - b) ** 2 / 6
 
-            def g(x: np.ndarray) -> np.floating[Any]:
+            def g(x: np.ndarray) -> np.floating:
                 return l1_ratio * np.linalg.norm(x, ord=1)
 
             def jac_f(x: np.ndarray) -> np.ndarray:
@@ -195,10 +195,10 @@ class TestProximalGradient(unittest.TestCase):
         x0 = np.random.random(1)
         l1_ratio = 0.1
 
-        def f(x: np.ndarray) -> np.floating[Any]:
+        def f(x: np.ndarray) -> np.floating:
             return np.linalg.norm(A @ x - b) ** 2 / 6
 
-        def g(x: np.ndarray) -> np.floating[Any]:
+        def g(x: np.ndarray) -> np.floating:
             return l1_ratio * np.linalg.norm(x, ord=1)
 
         def jac_f(x: np.ndarray) -> np.ndarray:

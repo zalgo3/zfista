@@ -1,7 +1,7 @@
 import warnings
 from abc import abstractmethod
 from functools import cmp_to_key
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import jax
 import numpy as np
@@ -52,8 +52,8 @@ class Problem:
         self,
         n_features: int,
         n_objectives: int,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,
@@ -158,8 +158,8 @@ class JOS1(Problem):
     def __init__(
         self,
         n_features: int = 5,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,
@@ -272,8 +272,8 @@ class FDS(Problem):
     def __init__(
         self,
         n_features: int = 10,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,
@@ -387,8 +387,8 @@ class TOI4(Problem):
 
     def __init__(
         self,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,
@@ -450,8 +450,8 @@ class TRIDIA(Problem):
 
     def __init__(
         self,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,
@@ -513,8 +513,8 @@ class LinearFunctionRank1(Problem):
         self,
         n_features: int = 10,
         n_objectives: int = 4,
-        l1_ratios: Optional[np.ndarray] = None,
-        l1_shifts: Optional[np.ndarray] = None,
+        l1_ratios: Optional[Sequence] = None,
+        l1_shifts: Optional[Sequence] = None,
         bounds: Optional[
             Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
         ] = None,

@@ -7,3 +7,4 @@ profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
+exclude = ['build', 'venv']
