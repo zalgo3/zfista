@@ -43,6 +43,8 @@ jobs:
           pip install .[test]
       - name: Test
         run: python -m unittest discover
+      - name: mypy
+        run: mypy .
   lint:
     runs-on: ubuntu-latest
     name: Lint

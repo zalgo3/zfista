@@ -38,12 +38,18 @@ help(minimize_proximal_gradient)
 
 ## Examples
 You can run some examples on jupyter notebooks.
-```sh
+```Shell
 jupyter notebook
 ```
 
 ## Testing
 You can run all tests by
-```sh
+```Shell
 python -m unittest discover
+```
+
+## Benchmark
+You can run the benchmark by
+```Shell
+python runtests.py
 ```
