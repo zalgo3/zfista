@@ -304,9 +304,7 @@ def benchmark(
     n_samples: int = 100,
     overwrite: bool = False,
     verbose: bool = False,
-) -> Tuple[
-    List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]
-]:
+) -> Tuple[List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]]:
     directory = create_directory(problem, experiment_name)
 
     initial_points = np.random.uniform(
