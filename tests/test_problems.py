@@ -2,38 +2,20 @@ import unittest
 
 import numpy as np
 
-from zfista.problems import FDS, FDS_CONSTRAINED, JOS1, JOS1_L1, SD, Problem
-
-
-class TestProblem(unittest.TestCase):
-    def setUp(self):
-        self.problem = Problem(2, 2)
-
-    def test_g(self):
-        x = np.array([1, 2])
-        expected = np.zeros(2)
-        result = self.problem.g(x)
-        np.testing.assert_almost_equal(result, expected)
-
-    def test_prox_wsum_g(self):
-        weight = np.array([1, 2])
-        x = np.array([3, 4])
-        expected = x
-        result = self.problem.prox_wsum_g(weight, x)
-        np.testing.assert_almost_equal(result, expected)
+from zfista.problems import FDS, JOS1, SD, Problem
 
 
 class TestJOS1(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.jos1 = JOS1()
 
-    def test_f(self):
+    def test_f(self) -> None:
         x = np.array([1, 2, 3, 4, 5])
         expected = np.array([11, 3])
         result = self.jos1.f(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_jac_f(self):
+    def test_jac_f(self) -> None:
         x = np.array([1, 2, 3, 4, 5])
         expected = np.array(
             [[2 / 5, 4 / 5, 6 / 5, 8 / 5, 10 / 5], [-2 / 5, 0, 2 / 5, 4 / 5, 6 / 5]]
@@ -43,16 +25,16 @@ class TestJOS1(unittest.TestCase):
 
 
 class TestJOS1_L1(unittest.TestCase):
-    def setUp(self):
-        self.jos1_l1 = JOS1_L1()
+    def setUp(self) -> None:
+        self.jos1_l1 = JOS1(l1_ratios=[0.2, 0.1], l1_shifts=[0, 1])
 
-    def test_g(self):
+    def test_g(self) -> None:
         x = np.array([1, 2, 3, 4, 5])
         expected = np.array([3, 1])
         result = self.jos1_l1.g(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_prox_wsum_g(self):
+    def test_prox_wsum_g(self) -> None:
         weight = np.array([0.5, 0.5])
         x = np.array([3, 4, 5, 6, 7])
         expected = np.array([2.85, 3.85, 4.85, 5.85, 6.85])
@@ -61,16 +43,16 @@ class TestJOS1_L1(unittest.TestCase):
 
 
 class TestSD(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.sd = SD()
 
-    def test_f(self):
+    def test_f(self) -> None:
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
         expected = np.array([7, 8])
         result = self.sd.f(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_jac_f(self):
+    def test_jac_f(self) -> None:
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
         expected = np.array(
             [[2, np.sqrt(2), np.sqrt(2), 1], [-2, -np.sqrt(2), -np.sqrt(2), -2]]
@@ -78,13 +60,13 @@ class TestSD(unittest.TestCase):
         result = self.sd.jac_f(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_g(self):
+    def test_g(self) -> None:
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
         expected = np.array([0, 0])
         result = self.sd.g(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_prox_wsum_g(self):
+    def test_prox_wsum_g(self) -> None:
         weight = np.array([0.5, 0.5])
         x = np.array([1, np.sqrt(2), np.sqrt(2), 1])
         expected = np.array([1, np.sqrt(2), np.sqrt(2), 1])
@@ -93,16 +75,16 @@ class TestSD(unittest.TestCase):
 
 
 class TestFDS(unittest.TestCase):
-    def setUp(self):
-        self.fds = FDS(n_dims=5)
+    def setUp(self) -> None:
+        self.fds = FDS(n_features=5)
 
-    def test_f(self):
+    def test_f(self) -> None:
         x = np.array([1, 2, 3, 4, 5])
         expected = np.array([0.0, 75.0855369, 0.1183459])
         result = self.fds.f(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_jac_f(self):
+    def test_jac_f(self) -> None:
         x = np.array([1, 2, 3, 4, 5])
         expected = np.array(
             [
@@ -122,21 +104,21 @@ class TestFDS(unittest.TestCase):
 
 
 class TestFDS_CONSTRAINED(unittest.TestCase):
-    def setUp(self):
-        self.fds_constrained = FDS_CONSTRAINED(n_dims=5)
+    def setUp(self) -> None:
+        self.fds_constrained = FDS(n_features=5, bounds=(0, np.inf))
 
-    def test_g(self):
-        x = np.ones(self.fds_constrained.n_dims)
+    def test_g(self) -> None:
+        x = np.ones(self.fds_constrained.n_features)
         expected = np.array([0, 0, 0])
         result = self.fds_constrained.g(x)
         np.testing.assert_almost_equal(result, expected)
 
-        x = -np.ones(self.fds_constrained.n_dims)
+        x = -np.ones(self.fds_constrained.n_features)
         expected = np.array([np.inf, np.inf, np.inf])
         result = self.fds_constrained.g(x)
         np.testing.assert_almost_equal(result, expected)
 
-    def test_prox_wsum_g(self):
+    def test_prox_wsum_g(self) -> None:
         weight = np.array([1 / 3, 1 / 3, 1 / 3])
         x = np.array([-3, -1, 0, 1, 3])
         expected = np.array([0, 0, 0, 1, 3])
