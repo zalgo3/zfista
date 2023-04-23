@@ -303,6 +303,7 @@ def benchmark(
     high: Union[float, np.ndarray],
     n_samples: int = 100,
     overwrite: bool = False,
+    max_iter: int = 10000000,
     verbose: bool = False,
 ) -> Tuple[List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]]:
     directory = create_directory(problem, experiment_name)
@@ -318,7 +319,7 @@ def benchmark(
             overwrite,
             lambda: Parallel(n_jobs=-1)(
                 delayed(problem.minimize_proximal_gradient)(
-                    x0, return_all=True, verbose=verbose
+                    x0, return_all=True, max_iter=max_iter, verbose=verbose
                 )
                 for x0 in initial_points
             ),
@@ -330,7 +331,11 @@ def benchmark(
             overwrite,
             lambda: Parallel(n_jobs=-1)(
                 delayed(problem.minimize_proximal_gradient)(
-                    x0, nesterov=True, return_all=True, verbose=verbose
+                    x0,
+                    nesterov=True,
+                    return_all=True,
+                    max_iter=max_iter,
+                    verbose=verbose,
                 )
                 for x0 in initial_points
             ),
@@ -344,7 +349,12 @@ def benchmark(
             overwrite,
             lambda: Parallel(n_jobs=-1)(
                 delayed(problem.minimize_proximal_gradient)(
-                    x0, nesterov=True, return_all=True, deprecated=True, verbose=verbose
+                    x0,
+                    nesterov=True,
+                    return_all=True,
+                    deprecated=True,
+                    max_iter=max_iter,
+                    verbose=verbose,
                 )
                 for x0 in initial_points
             ),
