@@ -38,6 +38,7 @@ def _solve_subproblem(
     yk: np.ndarray,
     w0: Optional[np.ndarray],
     tol: float = 1e-12,
+    max_iter: int = 100000,
     deprecated: bool = False,
 ) -> OptimizeResult:
     r"""Solve the subproblem to get x^k that minimizes the objective function
@@ -102,6 +103,9 @@ def _solve_subproblem(
     tol : float, default=1e-12
         The tolerance used in the `scipy` solver.
 
+    max_iter : int, default=100000
+        The maximum number of iterations in the `scipy` solver.
+
     deprecated : bool, default=False
         If True, the constraint is defined as
 
@@ -165,7 +169,11 @@ def _solve_subproblem(
         def _dual_minimized_scalar_fun(w: float) -> float:
             return _dual_minimized_fun_jac(np.array([w, 1 - w]))[0]
 
-        res_dual = minimize_scalar(_dual_minimized_scalar_fun, bounds=(0, 1))
+        res_dual = minimize_scalar(
+            _dual_minimized_scalar_fun,
+            bounds=(0, 1),
+            options={"maxiter": max_iter, "xatol": tol},
+        )
         if not res_dual.success:
             warn(res_dual.message)
         res.weight = np.array([res_dual.x, 1 - res_dual.x])
@@ -178,7 +186,7 @@ def _solve_subproblem(
             hess=BFGS(),
             bounds=Bounds(lb=0, ub=np.inf),
             constraints=LinearConstraint(np.ones(n_objectives), lb=1, ub=1),
-            options={"gtol": tol, "xtol": tol, "barrier_tol": tol},
+            options={"gtol": tol, "xtol": tol, "barrier_tol": tol, "maxiter": max_iter},
         )
         if not res_dual.success:
             warn(res_dual.message)
@@ -199,6 +207,7 @@ def minimize_proximal_gradient(
     tol: float = 1e-5,
     tol_internal: float = 1e-12,
     max_iter: int = 1000000,
+    max_iter_internal: int = 100000,
     max_backtrack_iter: int = 100,
     warm_start: bool = False,
     decay_rate: float = 0.5,
@@ -255,6 +264,10 @@ def minimize_proximal_gradient(
 
     max_iter : int, default=1000000
         The maximum number of iterations.
+
+    max_iter_internal : int, default=100000
+        The maximum number of iterations in the solver (``scipy.optimize.minimize(method='trust-constr')``)
+        for the subproblem
 
     warm_start : bool, default=False
         Use warm start in the subproblem.
@@ -359,6 +372,7 @@ def minimize_proximal_gradient(
                     yk,
                     w0,
                     tol=tol_internal,
+                    max_iter=max_iter_internal,
                     deprecated=deprecated,
                 )
                 xk = subproblem_result.x

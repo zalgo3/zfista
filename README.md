@@ -23,7 +23,7 @@ Note that FISTA also requires $f$ to be convex.
 - Documentation: https://zalgo3.github.io/zfista/
 
 ## Requirements
-- Python 3.7 or later
+- Python 3.8 or later
 
 ## Install
 ```sh
