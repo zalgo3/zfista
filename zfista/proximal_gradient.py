@@ -176,7 +176,7 @@ def _solve_subproblem(
             method="trust-constr",
             jac=True,
             hess=BFGS(),
-            bounds=Bounds(lb=0),
+            bounds=Bounds(lb=0, ub=np.inf),
             constraints=LinearConstraint(np.ones(n_objectives), lb=1, ub=1),
             options={"gtol": tol, "xtol": tol, "barrier_tol": tol},
         )
