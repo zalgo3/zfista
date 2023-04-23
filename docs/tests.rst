@@ -4,6 +4,14 @@ tests package
 Submodules
 ----------
 
+tests.test\_metrics module
+--------------------------
+
+.. automodule:: tests.test_metrics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.test\_problems module
 ---------------------------
 
