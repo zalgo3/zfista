@@ -38,6 +38,7 @@ handler.setLevel(INFO)
 logger.setLevel(INFO)
 logger.addHandler(handler)
 plt.style.use(["science", "bright"])
+plt.switch_backend("agg")
 
 
 @contextlib.contextmanager
@@ -69,13 +70,13 @@ def show_Pareto_front(
     res_normal: List[OptimizeResult],
     res_acc: List[OptimizeResult],
     res_acc_deprecated: List[OptimizeResult],
+    fname: str,
     iters: int = 10,
     s: float = 15,
     alpha: float = 0.75,
     elev: float = 15,
     azim: float = 130,
     linewidth: float = 0.1,
-    fname: Optional[str] = None,
 ) -> None:
     if len(res_normal[0].fun) > 3:
         return
@@ -208,10 +209,7 @@ def show_Pareto_front(
         ax.set_zlabel(f"$F_3$")
         ax.legend()
 
-    if fname is not None:
-        plt.savefig(fname, bbox_inches="tight")
-    else:
-        plt.show()
+    plt.savefig(fname, bbox_inches="tight")
     plt.close()
 
 
@@ -219,7 +217,7 @@ def show_error_decay(
     res_normal: OptimizeResult,
     res_acc: OptimizeResult,
     res_acc_deprecated: OptimizeResult,
-    fname: Optional[str] = None,
+    fname: str,
 ):
     normal_color = "#6536FF"
     acc_color = "#e74c3c"
@@ -238,10 +236,7 @@ def show_error_decay(
         linestyle="dotted",
     )
     plt.legend()
-    if fname is not None:
-        plt.savefig(fname, bbox_inches="tight")
-    else:
-        plt.show()
+    plt.savefig(fname, bbox_inches="tight")
     plt.close()
 
 
@@ -261,13 +256,13 @@ def save_results(
         res_normal,
         res_acc,
         res_acc_deprecated,
-        fname=os.path.join(directory, "pareto_front.pdf"),
+        os.path.join(directory, "pareto_front.pdf"),
     )
     show_error_decay(
         res_normal[0],
         res_acc[0],
         res_acc_deprecated[0],
-        fname=os.path.join(directory, "error_decay.pdf"),
+        os.path.join(directory, "error_decay.pdf"),
     )
     logger.info("Results saved.")
 
@@ -392,7 +387,7 @@ def generate_performance_profiles(
 def plot_performance_profiles(
     metric_key: str,
     algorithm_profiles: Dict[str, Tuple[np.ndarray, np.ndarray]],
-    fname: Optional[str],
+    fname: str,
 ) -> None:
     plt.figure(figsize=(7.5, 7.5), dpi=100)
     plt.xlabel("Threshold")
@@ -401,10 +396,7 @@ def plot_performance_profiles(
         thresholds, percentages = profile
         plt.step(thresholds, percentages, label=algorithm)
     plt.legend()
-    if fname is not None:
-        plt.savefig(fname, bbox_inches="tight")
-    else:
-        plt.show()
+    plt.savefig(fname, bbox_inches="tight")
     plt.close()
 
 
