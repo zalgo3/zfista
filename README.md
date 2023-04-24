@@ -51,5 +51,6 @@ python -m unittest discover
 ## Benchmark
 You can run the benchmark by
 ```Shell
+pip install -U joblib matplotlib pandas SciencePlots tqdm
 python runtests.py
 ```
