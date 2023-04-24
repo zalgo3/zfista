@@ -38,7 +38,7 @@ def _solve_subproblem(
     yk: np.ndarray,
     w0: Optional[np.ndarray],
     tol: float = 1e-12,
-    max_iter: int = 100000,
+    max_iter: int = 1000,
     deprecated: bool = False,
 ) -> OptimizeResult:
     r"""Solve the subproblem to get x^k that minimizes the objective function
