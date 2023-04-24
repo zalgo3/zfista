@@ -304,6 +304,7 @@ def benchmark(
     n_samples: int = 100,
     overwrite: bool = False,
     max_iter: int = 100000000,
+    tol_internal: float = 1e-11,
     verbose: bool = False,
 ) -> Tuple[List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]]:
     directory = create_directory(problem, experiment_name)
@@ -322,7 +323,7 @@ def benchmark(
                     x0,
                     return_all=True,
                     max_iter=max_iter,
-                    max_iter_internal=max_iter,
+                    tol_internal=tol_internal,
                     verbose=verbose,
                 )
                 for x0 in initial_points
@@ -339,7 +340,7 @@ def benchmark(
                     nesterov=True,
                     return_all=True,
                     max_iter=max_iter,
-                    max_iter_internal=max_iter,
+                    tol_internal=tol_internal,
                     verbose=verbose,
                 )
                 for x0 in initial_points
@@ -359,7 +360,7 @@ def benchmark(
                     return_all=True,
                     deprecated=True,
                     max_iter=max_iter,
-                    max_iter_internal=max_iter,
+                    tol_internal=tol_internal,
                     verbose=verbose,
                 )
                 for x0 in initial_points
