@@ -401,24 +401,29 @@ def plot_performance_profiles(
 
 
 def main(overwrite=False, verbose=False) -> None:
-    n_features_list = [5, 10, 20, 50, 100, 200, 500, 1000]
-
     problem_classes = [
         JOS1,
-        FDS,
         SD,
-        ZDT1,
         TOI4,
         TRIDIA,
         LinearFunctionRank1,
+        ZDT1,
+        FDS,
     ]
+
+    n_features_list = {
+        JOS1: [5, 10, 20, 50, 100, 200, 500, 1000],
+        ZDT1: [50, 100],
+        FDS: [5, 10, 20, 50, 100],
+        LinearFunctionRank1: [30],
+    }
 
     problems = []
 
     for problem_class in problem_classes:
         constructor_params = inspect.signature(problem_class.__init__).parameters  # type: ignore
-        if "n_features" in constructor_params:
-            for n_features in n_features_list:
+        if problem_class in n_features_list:
+            for n_features in n_features_list[problem_class]:
                 problem = problem_class(n_features=n_features)
                 problems.append(problem)
                 if (
