@@ -22,14 +22,14 @@ jobs:
         python: ["3.9", "3.10", "3.11", "3.12"]
     name: "${{ matrix.config.os }} Python ${{ matrix.python }}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ matrix.config.pip }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.cfg') }}
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Ruff Lint
         uses: astral-sh/ruff-action@v1
       - name: Ruff Format
