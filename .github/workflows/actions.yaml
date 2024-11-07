@@ -8,13 +8,11 @@ on:
     branches:
       - main
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-
 jobs:
   unittest:
+    concurrency:
+      group: ${{ github.workflow }}-unittest-${{ github.ref }}-${{ matrix.config.os }}-${{ matrix.python }}
+      cancel-in-progress: true
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
@@ -46,6 +44,9 @@ jobs:
       - name: mypy
         run: mypy .
   lint:
+    concurrency:
+      group: ${{ github.workflow }}-lint-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Lint
     steps:
@@ -57,6 +58,9 @@ jobs:
         with:
           args: "format --check"
   test-docs:
+    concurrency:
+      group: ${{ github.workflow }}-test-docs-${{ github.ref }}
+      cancel-in-progress: true
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: [unittest, lint]
@@ -67,6 +71,9 @@ jobs:
         with:
           publish: false
   deploy-docs:
+    concurrency:
+      group: ${{ github.workflow }}-deploy-docs-${{ github.ref }}
+      cancel-in-progress: true
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [unittest, lint]
