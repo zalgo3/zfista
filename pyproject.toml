@@ -25,6 +25,19 @@ docs = [
     "sphinxcontrib-katex",
     "sphinx_rtd_theme",
 ]
+benchmarks = [
+    "joblib",
+    "matplotlib",
+    "pandas",
+    "SciencePlots",
+    "tqdm"
+]
+examples = [
+    "zfista[benchmarks]",
+    "jupyter",
+    "PyWavelets",
+    "scikit-image",
+]
 
 [tool.mypy]
 strict = true
@@ -37,6 +50,7 @@ module = [
     "jaxopt.*",
     "mpl_toolkits.mplot3d.*",
     "joblib.*",
+    "scienceplots.*",
 ]
 ignore_missing_imports = true
 
