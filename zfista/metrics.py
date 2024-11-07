@@ -1,12 +1,14 @@
-from typing import Dict, List, Tuple
+from typing import cast
 
 import numpy as np
 from pymoo.indicators.hv import Hypervolume
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 from scipy.optimize import OptimizeResult
 
+from zfista._typing import FloatArray, Scalar
 
-def extract_function_values(res: List[OptimizeResult]) -> np.ndarray:
+
+def extract_function_values(res: list[OptimizeResult]) -> FloatArray:
     """
     Extract the objective function values from a list of OptimizeResult instances.
 
@@ -23,13 +25,13 @@ def extract_function_values(res: List[OptimizeResult]) -> np.ndarray:
     return np.vstack([result.fun for result in res])
 
 
-def extract_non_dominated_points(F: np.ndarray) -> np.ndarray:
+def extract_non_dominated_points(F: FloatArray) -> FloatArray:
     """
     Extract the non-dominated points from an objective function values array.
 
     Parameters
     ----------
-    F : np.ndarray
+    F : FloatArray
         Array of objective function values.
 
     Returns
@@ -37,18 +39,20 @@ def extract_non_dominated_points(F: np.ndarray) -> np.ndarray:
     np.ndarray
         Array of non-dominated points.
     """
-    return F[NonDominatedSorting().do(F, only_non_dominated_front=True)]
+    return cast(
+        FloatArray, F[NonDominatedSorting().do(F, only_non_dominated_front=True)]
+    )
 
 
-def purity(front: np.ndarray, front_true: np.ndarray) -> float:
+def purity(front: FloatArray, front_true: FloatArray) -> float:
     """
     Compute the purity of an estimated Pareto front compared to the true Pareto front.
 
     Parameters
     ----------
-    front : np.ndarray
+    front : FloatArray
         Array of points in the estimated Pareto front.
-    front_true : np.ndarray
+    front_true : FloatArray
         Array of points in the true Pareto front.
 
     Returns
@@ -59,15 +63,16 @@ def purity(front: np.ndarray, front_true: np.ndarray) -> float:
     return len(front) / len(front_true)
 
 
-def spread_metrics(front: np.ndarray, front_true: np.ndarray) -> Tuple[float, float]:
+def spread_metrics(front: FloatArray, front_true: FloatArray) -> tuple[Scalar, float]:
     """
-    Compute spread metrics (Gamma and Delta) between an estimated Pareto front and the true Pareto front.
+    Compute spread metrics (Gamma and Delta) between an estimated Pareto front and the
+    true Pareto front.
 
     Parameters
     ----------
-    front : np.ndarray
+    front : FloatArray
         Array of points in the estimated Pareto front.
-    front_true : np.ndarray
+    front_true : FloatArray
         Array of points in the true Pareto front.
 
     Returns
@@ -96,8 +101,8 @@ def spread_metrics(front: np.ndarray, front_true: np.ndarray) -> Tuple[float, fl
 
 
 def calculate_metrics(
-    *named_results: Tuple[str, List[OptimizeResult]]
-) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, float]]]:
+    *named_results: tuple[str, list[OptimizeResult]],
+) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]]]:
     """
     Calculate a variety of performance metrics for a set of named optimization results.
 
@@ -109,7 +114,8 @@ def calculate_metrics(
     Returns
     -------
     Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, float]]]
-        A pair of dictionaries containing the metrics and performance ratios for each optimization result.
+        A pair of dictionaries containing the metrics and performance ratios for each
+        optimization result.
     """
     result_names, results = zip(*named_results)
     fronts = [
@@ -120,8 +126,8 @@ def calculate_metrics(
     intersections = [
         np.array(
             list(
-                set(tuple(point) for point in front_true).intersection(
-                    set(tuple(point) for point in front)
+                {tuple(point) for point in front_true}.intersection(
+                    {tuple(point) for point in front}
                 )
             )
         )

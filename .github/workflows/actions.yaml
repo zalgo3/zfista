@@ -8,56 +8,32 @@ on:
     branches:
       - main
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-
 jobs:
-  unittest:
+  check:
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
         config:
           - { os: ubuntu-latest, pip: ~/.cache/pip }
           - { os: macos-latest, pip: ~/Library/Caches/pip }
-        python: ["3.8", "3.9", "3.10"]
+        python: ["3.9", "3.10", "3.11", "3.12"]
     name: "${{ matrix.config.os }} Python ${{ matrix.python }}"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          architecture: x64
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.config.pip }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
+      - name: Install tox
         run: |
           pip install --upgrade pip
-          pip install .[test]
+          pip install tox tox-gh-actions
       - name: Test
-        run: python -m unittest discover
-      - name: mypy
-        run: mypy .
-  lint:
-    runs-on: ubuntu-latest
-    name: Lint
-    steps:
-      - uses: actions/checkout@v3
-      - name: Black
-        uses: psf/black@stable
-        with:
-          jupyter: true
+        run: tox
   test-docs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    needs: [unittest, lint]
+    needs: [check]
     name: Test docs
     steps:
       - id: deployment
@@ -67,7 +43,7 @@ jobs:
   deploy-docs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    needs: [unittest, lint]
+    needs: [check]
     name: Deploy docs
     environment:
       name: github-pages

@@ -1,5 +1,4 @@
 import unittest
-from typing import Dict
 
 import numpy as np
 from scipy.optimize import OptimizeResult
@@ -14,7 +13,7 @@ from zfista.metrics import (
 
 
 class TestMetrics(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.res = [
             OptimizeResult(
                 fun=np.array([0.1, 0.2]), success=True, time=1, nit=10, nit_internal=5
@@ -34,11 +33,11 @@ class TestMetrics(unittest.TestCase):
             ]
         )
 
-    def test_extract_function_values(self):
+    def test_extract_function_values(self) -> None:
         result = extract_function_values(self.res)
         np.testing.assert_array_equal(result, self.function_values)
 
-    def test_extract_non_dominated_points(self):
+    def test_extract_non_dominated_points(self) -> None:
         non_dominated_points = extract_non_dominated_points(self.function_values)
         expected_points = np.array(
             [
@@ -48,7 +47,7 @@ class TestMetrics(unittest.TestCase):
         )
         np.testing.assert_array_equal(non_dominated_points, expected_points)
 
-    def test_purity(self):
+    def test_purity(self) -> None:
         front = np.array(
             [
                 [0.1, 0.2],
@@ -64,7 +63,7 @@ class TestMetrics(unittest.TestCase):
         )
         self.assertAlmostEqual(purity(front, front_true), 2 / 3)
 
-    def test_spread_metrics(self):
+    def test_spread_metrics(self) -> None:
         front = np.array(
             [
                 [0.1, 0.2],
@@ -79,13 +78,13 @@ class TestMetrics(unittest.TestCase):
             ]
         )
         gamma, delta = spread_metrics(front, front_true)
-        self.assertAlmostEqual(gamma, 0.1)
+        self.assertAlmostEqual(float(gamma), 0.1)
         self.assertAlmostEqual(delta, 0.5)
 
-    def test_calculate_metrics(self):
+    def test_calculate_metrics(self) -> None:
         named_results = [("result", self.res)]
         metrics, ratios = calculate_metrics(*named_results)
-        expected_metrics = {
+        expected_metrics: dict[str, dict[str, float]] = {
             "Hypervolume": {"result": 0},
             "Gamma": {"result": 0.1},
             "Delta": {"result": 0},
@@ -95,7 +94,7 @@ class TestMetrics(unittest.TestCase):
             "Avg iterations": {"result": 20.0},
             "Avg internal iterations": {"result": 10.0},
         }
-        expected_ratios = {
+        expected_ratios: dict[str, dict[str, float]] = {
             "Hypervolume": {"result": 1},
             "Gamma": {"result": 1},
             "Delta": {"result": 1},
@@ -110,9 +109,9 @@ class TestMetrics(unittest.TestCase):
 
     def compare_metrics(
         self,
-        actual_metrics: Dict[str, Dict[str, float]],
-        expected_metrics: Dict[str, Dict[str, float]],
-    ):
+        actual_metrics: dict[str, dict[str, float]],
+        expected_metrics: dict[str, dict[str, float]],
+    ) -> None:
         for key in actual_metrics:
             for sub_key in actual_metrics[key]:
                 self.assertAlmostEqual(
