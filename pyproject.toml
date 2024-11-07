@@ -25,7 +25,7 @@ docs = [
     "sphinxcontrib-katex",
     "sphinx_rtd_theme",
 ]
-benchmarks = [
+bench = [
     "joblib",
     "matplotlib",
     "pandas",
@@ -33,7 +33,7 @@ benchmarks = [
     "tqdm"
 ]
 examples = [
-    "zfista[benchmarks]",
+    "zfista[bench]",
     "jupyter",
     "PyWavelets",
     "scikit-image",
