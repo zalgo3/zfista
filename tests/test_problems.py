@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from zfista.problems import FDS, JOS1, SD, Problem
+from zfista.problems import FDS, JOS1, SD
 
 
 class TestJOS1(unittest.TestCase):

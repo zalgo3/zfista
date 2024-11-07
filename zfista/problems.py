@@ -1,17 +1,22 @@
-import warnings
+from __future__ import annotations
+
 from abc import abstractmethod
-from functools import cmp_to_key
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Any, TypeVar, cast
 
 import jax
 import numpy as np
-from jaxopt.projection import projection_box, projection_non_negative
+from jaxopt.projection import projection_box
 from jaxopt.prox import prox_lasso
-from scipy.optimize import OptimizeResult, root_scalar
+from numpy.typing import NBitBase, NDArray
+from scipy.optimize import OptimizeResult
 
 from zfista import minimize_proximal_gradient
+from zfista._typing import FloatArray
 
-jax.config.update("jax_enable_x64", True)
+T = TypeVar("T", bound=NBitBase)
+
+jax.config.update("jax_enable_x64", True)  # type: ignore[no-untyped-call]
 
 
 class Problem:
@@ -24,7 +29,8 @@ class Problem:
 
         F_i(x) = f_i(x) + g_i(x),
 
-    where :math:`f_i` is convex and differentiable and :math:`g_i` is closed, proper and convex.
+    where :math:`f_i` is convex and differentiable
+    and :math:`g_i` is closed, proper and convex.
 
     Parameters
     ----------
@@ -35,15 +41,18 @@ class Problem:
         The number of objective functions.
 
     l1_ratios
-        An array of shape (n_objectives,) containing the coefficients for the L1 regularization term for each objective function.
+        An array of shape (n_objectives,) containing the coefficients
+        for the L1 regularization term for each objective function.
         If not provided, no L1 regularization is applied.
 
     l1_shifts
-        An array of shape (n_objectives,) containing the shifts for the L1 regularization term for each objective function.
+        An array of shape (n_objectives,) containing the shifts
+        for the L1 regularization term for each objective function.
         If not provided, no shifts are applied.
 
     bounds
-        A tuple with two elements representing the lower and upper bounds of the decision variable.
+        A tuple with two elements representing the lower and upper bounds
+        of the decision variable.
         Each element can be a scalar or an array of shape (n_features,).
         If not provided, no bounds are applied.
     """
@@ -52,19 +61,17 @@ class Problem:
         self,
         n_features: int,
         n_objectives: int,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[NDArray[np.floating[T]] | float, NDArray[np.floating[T]] | float]
+        | None = None,
     ) -> None:
         self.n_features = n_features
         self.n_objectives = n_objectives
-        self.l1_ratios = l1_ratios
-        if l1_ratios is not None:
-            self.l1_shifts = (
-                np.zeros(n_objectives) if l1_shifts is None else np.array(l1_shifts)
-            )
+        self.l1_ratios = None if l1_ratios is None else np.array(l1_ratios)
+        self.l1_shifts = (
+            np.zeros(n_objectives) if l1_shifts is None else np.array(l1_shifts)
+        )
         self.bounds = bounds
         self.name = self._generate_name()
 
@@ -81,14 +88,14 @@ class Problem:
         return "_".join(name_parts)
 
     @abstractmethod
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         pass
 
     @abstractmethod
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         pass
 
-    def g(self, x: np.ndarray) -> np.ndarray:
+    def g(self, x: FloatArray) -> FloatArray:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         if self.bounds is not None:
@@ -99,12 +106,16 @@ class Problem:
                 raise ValueError("len(l1_ratios) should be equal to n_objectives.")
             if self.n_objectives != len(self.l1_shifts):
                 raise ValueError("len(l1_shifts) should be equal to n_objectives.")
-            return self.l1_ratios * np.linalg.norm(
-                x - self.l1_shifts.reshape(-1, 1), ord=1, axis=1
+            return cast(
+                FloatArray,
+                self.l1_ratios
+                * np.linalg.norm(x - self.l1_shifts.reshape(-1, 1), ord=1, axis=1),
             )
         return np.zeros(self.n_objectives)
 
-    def prox_wsum_g(self, weight: np.ndarray, x: np.ndarray) -> np.ndarray:
+    def prox_wsum_g(
+        self, weight: NDArray[np.floating[T]], x: NDArray[np.floating[T]]
+    ) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         if self.n_objectives != len(weight):
@@ -123,7 +134,9 @@ class Problem:
             x = projection_box(x, (self.bounds[0], self.bounds[1]))
         return x
 
-    def minimize_proximal_gradient(self, x0: np.ndarray, **kwargs) -> OptimizeResult:
+    def minimize_proximal_gradient(
+        self, x0: NDArray[np.floating[T]], **kwargs: Any
+    ) -> OptimizeResult:
         return minimize_proximal_gradient(
             self.f,
             self.g,
@@ -152,17 +165,19 @@ class JOS1(Problem):
 
         \nabla f_1(x) = (2 / n) x, \nabla f_2(x) = (2 / n) (x - 2).
 
-    Reference: Jin, Y., Olhofer, M., Sendhoff, B.: Dynamic weighted aggregation for evolutionary multi-objective optimization: Why does it work and how? In: GECCO’01 Proceedings of the 3rd Annual Conference on Genetic and Evolutionary Computation, pp. 1042–1049 (2001)
+    Reference: Jin, Y., Olhofer, M., Sendhoff, B.: Dynamic weighted aggregation for
+    evolutionary multi-objective optimization: Why does it work and how?
+    In: GECCO’01 Proceedings of the 3rd Annual Conference on Genetic and Evolutionary
+    Computation, pp. 1042–1049 (2001)
     """
 
     def __init__(
         self,
         n_features: int = 5,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[NDArray[np.floating[T]] | float, NDArray[np.floating[T]] | float]
+        | None = None,
     ) -> None:
         super().__init__(
             n_features=n_features,
@@ -172,14 +187,14 @@ class JOS1(Problem):
             bounds=bounds,
         )
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         f1 = np.linalg.norm(x) ** 2 / self.n_features
         f2 = np.linalg.norm(x - 2) ** 2 / self.n_features
         return np.array([f1, f2])
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         jac_f1 = 2 * x / self.n_features
@@ -211,26 +226,29 @@ class SD(Problem):
 
         \nabla f_1(x) = [1, \sqrt{2}, \sqrt{2}, 1], \nabla f_2(x) = 0.
 
-    Reference: Stadler, W., Dauer, J.: Multicriteria optimization in engineering: a tutorial and survey. In: Kamat, M.P. (ed.) Progress in Aeronautics and Astronautics: Structural Optimization: Status and Promise, vol. 150, pp. 209–249. American Institute of Aeronautics and Astronautics, Reston (1992)
+    Reference: Stadler, W., Dauer, J.: Multicriteria optimization in engineering:
+    a tutorial and survey. In: Kamat, M.P. (ed.) Progress in Aeronautics and
+    Astronautics: Structural Optimization: Status and Promise, vol. 150, pp. 209–249.
+    American Institute of Aeronautics and Astronautics, Reston (1992)
     """
 
     def __init__(
         self,
-    ):
+    ) -> None:
         super().__init__(
             n_features=4,
             n_objectives=2,
             bounds=(1e-6, np.inf),
         )
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         f1 = 2 * x[0] + np.sqrt(2) * x[1] + np.sqrt(2) * x[2] + x[3]
         f2 = 2 / x[0] + 2 * np.sqrt(2) / x[1] + 2 * np.sqrt(2) / x[2] + 2 / x[3]
         return np.array([f1, f2])
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         jac_f1 = np.array([2, np.sqrt(2), np.sqrt(2), 1])
         jac_f2 = np.array(
             [
@@ -266,17 +284,17 @@ class FDS(Problem):
         \nabla f_3(x) = - [i (n - i + 1) \exp(-x_i) / (n (n + 1))]_i
         \end{gathered}
 
-    Reference: Fliege, J., Graña Drummond, L.M., Svaiter, B.F.: Newton’s method for multiobjective optimization. SIAM J. Optim. 20(2), 602–626 (2009)
+    Reference: Fliege, J., Graña Drummond, L.M., Svaiter, B.F.: Newton’s method for
+    multiobjective optimization. SIAM J. Optim. 20(2), 602–626 (2009)
     """
 
     def __init__(
         self,
         n_features: int = 10,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[NDArray[np.floating[T]] | float, NDArray[np.floating[T]] | float]
+        | None = None,
     ) -> None:
         super().__init__(
             n_features=n_features,
@@ -288,7 +306,7 @@ class FDS(Problem):
         self.one_to_n = np.arange(self.n_features) + 1
         self.conv_n = self.one_to_n * self.one_to_n[::-1]
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         f1 = np.inner(self.one_to_n, (x - self.one_to_n) ** 4) / self.n_features**2
@@ -298,7 +316,7 @@ class FDS(Problem):
         )
         return np.array([f1, f2, f3])
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         jac_f1 = 4 / self.n_features**2 * self.one_to_n * (x - self.one_to_n) ** 3
@@ -331,16 +349,20 @@ class ZDT1(Problem):
 
         \begin{gathered}
         \nabla f_1(x) = (1, 0, \dots, 0)^\top, \\
-        \nabla f_2(x) = (- \frac{\sqrt{h(x) / x_1}}{2}, \frac{9}{2 (n - 1)} (1 - \sqrt{x_1 / h(x)}), \dots, \frac{9}{2 (n - 1)} (1 - \sqrt{x_1 / h(x)}) )^\top.
+        \nabla f_2(x) = (- \frac{\sqrt{h(x) / x_1}}{2},
+            \frac{9}{2 (n - 1)} (1 - \sqrt{x_1 / h(x)}),
+            \dots, \frac{9}{2 (n - 1)} (1 - \sqrt{x_1 / h(x)}) )^\top.
         \end{gathered}
 
-    Reference: Zitzler, E., Deb, K., Thiele, L.: Comparison of multiobjective evolutionary algorithms: empirical results. Evolutionary Computation, IEEE Transactions on 8(2), 257–271 (2000)
+    Reference: Zitzler, E., Deb, K., Thiele, L.: Comparison of multiobjective
+    evolutionary algorithms: empirical results. Evolutionary Computation,
+    IEEE Transactions on 8(2), 257–271 (2000)
     """
 
     def __init__(self, n_features: int = 30) -> None:
         super().__init__(n_features=n_features, n_objectives=2, bounds=(1e-6, np.inf))
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         f1 = x[0]
@@ -348,7 +370,7 @@ class ZDT1(Problem):
         f2 = h * (1 - np.sqrt(f1 / h))
         return np.array([f1, f2])
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         jac_f1 = np.zeros(self.n_features)
@@ -382,16 +404,17 @@ class TOI4(Problem):
         \nabla f_2(x) = (x_1 - x_2, x_2 - x_1, x_3 - x_4, x_4 - x_3)^\top.
         \end{gathered}
 
-    Reference: Toint, Ph.L.: Test problems for partially separable optimization and results for the routine PSPMIN. Tech. Rep. 83/4, Department of Mathematics, University of Namur, Brussels (1983)
+    Reference: Toint, Ph.L.: Test problems for partially separable optimization
+    and results for the routine PSPMIN. Tech. Rep. 83/4, Department of Mathematics,
+    University of Namur, Brussels (1983)
     """
 
     def __init__(
         self,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[NDArray[np.floating[T]] | float, NDArray[np.floating[T]] | float]
+        | None = None,
     ) -> None:
         super().__init__(
             n_features=4,
@@ -401,14 +424,14 @@ class TOI4(Problem):
             bounds=bounds,
         )
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         f1 = x[0] ** 2 + x[1] ** 2 + 1
         f2 = 0.5 * ((x[0] - x[1]) ** 2 + (x[2] - x[3]) ** 2) + 1
         return np.array([f1, f2])
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         jac_f1 = np.zeros(self.n_features)
@@ -445,16 +468,17 @@ class TRIDIA(Problem):
         \nabla f_3(x) = (0, 24 x_2 - 12 x_3, 6 x_3 - 12 x_2)^\top.
         \end{gathered}
 
-    Reference: Toint, Ph.L.: Test problems for partially separable optimization and results for the routine PSPMIN. Tech. Rep. 83/4, Department of Mathematics, University of Namur, Brussels (1983)
+    Reference: Toint, Ph.L.: Test problems for partially separable optimization and
+    results for the routine PSPMIN. Tech. Rep. 83/4, Department of Mathematics,
+    University of Namur, Brussels (1983)
     """
 
     def __init__(
         self,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[NDArray[np.floating[T]] | float, NDArray[np.floating[T]] | float]
+        | None = None,
     ) -> None:
         super().__init__(
             n_features=3,
@@ -464,7 +488,7 @@ class TRIDIA(Problem):
             bounds=bounds,
         )
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         return np.array(
@@ -475,7 +499,7 @@ class TRIDIA(Problem):
             ]
         )
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
         return np.array(
@@ -506,18 +530,17 @@ class LinearFunctionRank1(Problem):
         \nabla f_i(x) = \left[ 2 i k \left( i \sum_{j = 1}^n j x_j - 1 \right) \right]_k
         \end{gathered}
 
-    Reference: Moré, J.J., Garbow, B.S., Hillstrom, K.E.: Testing unconstrained optimization software. ACM T. Math. Softw. 7(1), 17–41 (1981)
+    Reference: Moré, J.J., Garbow, B.S., Hillstrom, K.E.: Testing unconstrained
+    optimization software. ACM T. Math. Softw. 7(1), 17–41 (1981)
     """
 
     def __init__(
         self,
         n_features: int = 10,
         n_objectives: int = 4,
-        l1_ratios: Optional[Sequence] = None,
-        l1_shifts: Optional[Sequence] = None,
-        bounds: Optional[
-            Tuple[Union[np.ndarray, float], Union[np.ndarray, float]]
-        ] = None,
+        l1_ratios: Sequence[float] | None = None,
+        l1_shifts: Sequence[float] | None = None,
+        bounds: tuple[FloatArray | float, FloatArray | float] | None = None,
     ) -> None:
         super().__init__(
             n_features=n_features,
@@ -529,20 +552,24 @@ class LinearFunctionRank1(Problem):
         self.range_n_objectives = np.arange(1, self.n_objectives + 1)
         self.range_n_features = np.arange(1, self.n_features + 1)
 
-    def f(self, x: np.ndarray) -> np.ndarray:
+    def f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
-        return (self.range_n_objectives * np.inner(self.range_n_features, x) - 1) ** 2
+        return cast(
+            NDArray[np.floating[T]],
+            (self.range_n_objectives * np.inner(self.range_n_features, x) - 1) ** 2,
+        )
 
-    def jac_f(self, x: np.ndarray) -> np.ndarray:
+    def jac_f(self, x: NDArray[np.floating[T]]) -> NDArray[np.floating[T]]:
         if self.n_features != len(x):
             raise ValueError(f"len(x) should be equal to n_features, got {x}.")
-        return (
+        return cast(
+            NDArray[np.floating[T]],
             2
             * self.range_n_objectives[:, None]
             * self.range_n_features
             * (
                 self.range_n_objectives[:, None] * np.inner(self.range_n_features, x)
                 - 1
-            )
+            ),
         )

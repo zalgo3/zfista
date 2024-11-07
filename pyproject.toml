@@ -2,9 +2,54 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.isort]
-profile = "black"
+[project]
+name = "zfista"
+version = "0.0.2"
+description = "A globally convergent fast iterative shrinkage-thresholding algorithm with a new momentum factor for single and multi-objective convex optimization"
+readme = "README.md"
+authors = [
+    {name = "Hiroki Tanabe", email = "tanabe.hiroki.45n@kyoto-u.jp"},
+]
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "jaxopt",
+    "pymoo",
+    "scipy",
+    "typing_extensions",
+]
+
+[project.optional-dependencies]
+test = [
+    "scikit-learn",
+    "mypy",
+]
+docs = [
+    "sphinx",
+    "sphinxcontrib-katex",
+    "sphinx_rtd_theme",
+]
+
+[tool.setuptools]
+packages = ["find:"]
 
 [tool.mypy]
 ignore_missing_imports = true
+strict = true
 exclude = ['build', 'venv']
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "C",
+    "I",
+    "B",
+    "UP",
+]
+ignore = [
+    "E111",
+    "E114",
+    "E117",
+]

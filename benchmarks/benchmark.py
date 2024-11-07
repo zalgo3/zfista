@@ -1,25 +1,27 @@
+from __future__ import annotations
+
 import contextlib
 import inspect
 import json
 import os
 import pickle
+from collections.abc import Generator
 from logging import INFO, StreamHandler, getLogger
-from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, cast
 
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scienceplots
 from joblib import Parallel, delayed
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import OptimizeResult
 from tqdm.auto import tqdm
 
+from zfista._typing import FloatArray
 from zfista.metrics import (
     calculate_metrics,
     extract_function_values,
-    extract_non_dominated_points,
-    spread_metrics,
 )
 from zfista.problems import (
     FDS,
@@ -42,11 +44,11 @@ plt.switch_backend("agg")
 
 
 @contextlib.contextmanager
-def tqdm_joblib(total: Optional[int] = None, **kwargs) -> Generator:
+def tqdm_joblib(total: int | None = None, **kwargs: Any) -> Generator[tqdm, None, None]:
     pbar = tqdm(total=total, miniters=1, smoothing=0, **kwargs)
 
-    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
-        def __call__(self, *args, **kwargs):
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):  # type: ignore[misc]
+        def __call__(self, *args: Any, **kwargs: Any) -> Any:
             pbar.update(n=self.batch_size)
             return super().__call__(*args, **kwargs)
 
@@ -67,9 +69,9 @@ def create_directory(problem: Problem, experiment_name: str) -> str:
 
 
 def show_Pareto_front(
-    res_normal: List[OptimizeResult],
-    res_acc: List[OptimizeResult],
-    res_acc_deprecated: List[OptimizeResult],
+    res_normal: list[OptimizeResult],
+    res_acc: list[OptimizeResult],
+    res_acc_deprecated: list[OptimizeResult],
     fname: str,
     iters: int = 10,
     s: float = 15,
@@ -90,7 +92,7 @@ def show_Pareto_front(
     acc_dep_color = "#3cc756"
     initial_color = "#8e44ad"
 
-    common_style = {"s": s, "alpha": alpha, "linewidth": linewidth}
+    common_style: dict[str, Any] = {"s": s, "alpha": alpha, "linewidth": linewidth}
 
     fig = plt.figure(figsize=(7.5, 7.5), dpi=100)
     if len(res_normal[0].fun) == 2:
@@ -170,13 +172,13 @@ def show_Pareto_front(
                 **common_style,
             )
 
-        ax.set_xlabel(f"$F_1$")
-        ax.set_ylabel(f"$F_2$")
+        ax.set_xlabel("$F_1$")
+        ax.set_ylabel("$F_2$")
         ax.legend()
     elif len(res_normal[0].fun) == 3:
-        ax = fig.add_subplot(111, projection="3d")
-        ax.view_init(elev=elev, azim=azim)
-        ax.scatter(
+        ax_3d = cast(Axes3D, fig.add_subplot(111, projection="3d"))
+        ax_3d.view_init(elev=elev, azim=azim)
+        ax_3d.scatter(
             F_normal[:, 0],
             F_normal[:, 1],
             F_normal[:, 2],
@@ -185,7 +187,7 @@ def show_Pareto_front(
             color=normal_color,
             **common_style,
         )
-        ax.scatter(
+        ax_3d.scatter(
             F_acc[:, 0],
             F_acc[:, 1],
             F_acc[:, 2],
@@ -194,7 +196,7 @@ def show_Pareto_front(
             color=acc_color,
             **common_style,
         )
-        ax.scatter(
+        ax_3d.scatter(
             F_acc_deprecated[:, 0],
             F_acc_deprecated[:, 1],
             F_acc_deprecated[:, 2],
@@ -204,10 +206,10 @@ def show_Pareto_front(
             **common_style,
         )
 
-        ax.set_xlabel(f"$F_1$")
-        ax.set_ylabel(f"$F_2$")
-        ax.set_zlabel(f"$F_3$")
-        ax.legend()
+        ax_3d.set_xlabel("$F_1$")
+        ax_3d.set_ylabel("$F_2$")
+        ax_3d.set_zlabel("$F_3$")
+        ax_3d.legend()
 
     plt.savefig(fname, bbox_inches="tight")
     plt.close()
@@ -218,7 +220,7 @@ def show_error_decay(
     res_acc: OptimizeResult,
     res_acc_deprecated: OptimizeResult,
     fname: str,
-):
+) -> None:
     normal_color = "#6536FF"
     acc_color = "#e74c3c"
     acc_dep_color = "#3cc756"
@@ -243,10 +245,10 @@ def show_error_decay(
 def save_results(
     problem: Problem,
     experiment_name: str,
-    res_normal: List[OptimizeResult],
-    res_acc: List[OptimizeResult],
-    res_acc_deprecated: List[OptimizeResult],
-    metrics: Dict[str, Dict[str, float]],
+    res_normal: list[OptimizeResult],
+    res_acc: list[OptimizeResult],
+    res_acc_deprecated: list[OptimizeResult],
+    metrics: dict[str, dict[str, float]],
 ) -> None:
     logger.info("Saving results...")
     directory = create_directory(problem, experiment_name)
@@ -271,13 +273,13 @@ def load_or_run_results(
     file_name: str,
     directory: str,
     overwrite: bool,
-    run_fn: Callable,
-) -> List[OptimizeResult]:
+    run_fn: Callable[[], list[OptimizeResult]],
+) -> list[OptimizeResult]:
     if not overwrite and os.path.exists(os.path.join(directory, file_name)):
         try:
             logger.info(f"Loading {file_name}...")
             with open(os.path.join(directory, file_name), "rb") as f:
-                results = pickle.load(f)
+                results: list[OptimizeResult] = pickle.load(f)
         except Exception as e:
             logger.warning(f"Failed to load {file_name} due to: {e}")
             results = run_fn()
@@ -294,21 +296,21 @@ def load_or_run_results(
 def benchmark(
     problem: Problem,
     experiment_name: str,
-    low: Union[float, np.ndarray],
-    high: Union[float, np.ndarray],
+    low: float | FloatArray,
+    high: float | FloatArray,
     n_samples: int = 100,
     overwrite: bool = False,
     max_iter: int = 100000000,
     tol_internal: float = 1e-11,
     verbose: bool = False,
-) -> Tuple[List[OptimizeResult], List[OptimizeResult], List[OptimizeResult]]:
+) -> tuple[list[OptimizeResult], list[OptimizeResult], list[OptimizeResult]]:
     directory = create_directory(problem, experiment_name)
 
     initial_points = np.random.uniform(
         low=low, high=high, size=(n_samples, problem.n_features)
     )
 
-    with tqdm_joblib(total=n_samples, desc="Normal") as progress_bar:
+    with tqdm_joblib(total=n_samples, desc="Normal"):
         res_normal = load_or_run_results(
             "normal_results.pkl",
             directory,
@@ -324,7 +326,7 @@ def benchmark(
                 for x0 in initial_points
             ),
         )
-    with tqdm_joblib(total=n_samples, desc="Accelerated") as progress_bar:
+    with tqdm_joblib(total=n_samples, desc="Accelerated"):
         res_acc = load_or_run_results(
             "accelerated_results.pkl",
             directory,
@@ -343,7 +345,7 @@ def benchmark(
         )
     with tqdm_joblib(
         total=n_samples, desc="Accelerated (without $f_i(y^k) - F_i(x^k)$)"
-    ) as progress_bar:
+    ):
         res_acc_deprecated = load_or_run_results(
             "accelerated_results_deprecated.pkl",
             directory,
@@ -366,9 +368,9 @@ def benchmark(
 
 
 def generate_performance_profiles(
-    performance_ratios: Dict[str, Dict[str, List[float]]]
-) -> Dict[str, Dict[str, Tuple[np.ndarray, np.ndarray]]]:
-    performance_profiles: Dict[str, Dict[str, Tuple[np.ndarray, np.ndarray]]] = {}
+    performance_ratios: dict[str, dict[str, list[float]]],
+) -> dict[str, dict[str, tuple[FloatArray, FloatArray]]]:
+    performance_profiles: dict[str, dict[str, tuple[FloatArray, FloatArray]]] = {}
     for ratio_key, algorithm_ratios in performance_ratios.items():
         performance_profiles[ratio_key] = {}
         for algorithm, ratios in algorithm_ratios.items():
@@ -385,8 +387,7 @@ def generate_performance_profiles(
 
 
 def plot_performance_profiles(
-    metric_key: str,
-    algorithm_profiles: Dict[str, Tuple[np.ndarray, np.ndarray]],
+    algorithm_profiles: dict[str, tuple[FloatArray, FloatArray]],
     fname: str,
 ) -> None:
     plt.figure(figsize=(7.5, 7.5), dpi=100)
@@ -400,7 +401,7 @@ def plot_performance_profiles(
     plt.close()
 
 
-def main(overwrite=False, verbose=False) -> None:
+def initialize_problems() -> list[Problem]:
     problem_classes = [
         JOS1,
         SD,
@@ -410,18 +411,15 @@ def main(overwrite=False, verbose=False) -> None:
         ZDT1,
         FDS,
     ]
-
     n_features_list = {
         JOS1: [5, 10, 20, 50, 100, 200, 500, 1000],
         ZDT1: [50, 100],
         FDS: [5, 10, 20, 50, 100],
         LinearFunctionRank1: [30],
     }
-
     problems = []
-
     for problem_class in problem_classes:
-        constructor_params = inspect.signature(problem_class.__init__).parameters  # type: ignore
+        constructor_params = inspect.signature(problem_class.__init__).parameters  # type: ignore[misc]
         if problem_class in n_features_list:
             for n_features in n_features_list[problem_class]:
                 problem = problem_class(n_features=n_features)
@@ -449,7 +447,11 @@ def main(overwrite=False, verbose=False) -> None:
                 l1_ratios = (np.arange(n_objectives) + 1) / n_features
                 l1_shifts = np.arange(n_objectives)
                 problems.append(problem_class(l1_ratios=l1_ratios, l1_shifts=l1_shifts))
+    return problems
 
+
+def main(overwrite: bool = False, verbose: bool = False) -> None:
+    problems = initialize_problems()
     experiment_name = "proximal_vs_accelerated_proximal"
     problem_parameters = {
         "JOS1": {"low": -2, "high": 4},
@@ -460,14 +462,14 @@ def main(overwrite=False, verbose=False) -> None:
         "TRIDIA": {"low": -1, "high": 1},
         "LinearFunctionRank1": {"low": -1, "high": 1},
     }
-    performance_ratios: Dict[str, Dict[str, List[float]]] = {}
+    performance_ratios: dict[str, dict[str, list[float]]] = {}
 
     df_rows = []
 
     for problem in problems:
         logger.info(f"Running benchmark for {problem.name}...")
         problem_params = problem_parameters.get(type(problem).__name__)
-        low, high = problem_params.get("low"), problem_params.get("high")  # type: ignore
+        low, high = problem_params.get("low"), problem_params.get("high")  # type: ignore[attr-defined]
         res_normal, res_acc, res_acc_deprecated = benchmark(
             problem,
             experiment_name,
@@ -511,7 +513,6 @@ def main(overwrite=False, verbose=False) -> None:
     for ratio_key, algorithm_profiles in performance_profiles.items():
         logger.info(f"Plotting performance profile for {ratio_key}...")
         plot_performance_profiles(
-            ratio_key,
             algorithm_profiles,
             os.path.join("results", experiment_name, f"{ratio_key}.pdf"),
         )
