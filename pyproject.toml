@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zfista"
-version = "0.0.2"
+version = "0.0.3"
 description = "A globally convergent fast iterative shrinkage-thresholding algorithm with a new momentum factor for single and multi-objective convex optimization"
 readme = "README.md"
 authors = [
