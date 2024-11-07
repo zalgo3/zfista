@@ -5,9 +5,8 @@ import inspect
 import json
 import os
 import pickle
-from collections.abc import Generator
 from logging import INFO, StreamHandler, getLogger
-from typing import Any, Callable, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import joblib
 import matplotlib.pyplot as plt
@@ -15,10 +14,8 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from mpl_toolkits.mplot3d import Axes3D
-from scipy.optimize import OptimizeResult
 from tqdm.auto import tqdm
 
-from zfista._typing import FloatArray
 from zfista.metrics import (
     calculate_metrics,
     extract_function_values,
@@ -34,6 +31,13 @@ from zfista.problems import (
     Problem,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from scipy.optimize import OptimizeResult
+
+    from zfista._typing import FloatArray
+
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(INFO)
@@ -44,7 +48,9 @@ plt.switch_backend("agg")
 
 
 @contextlib.contextmanager
-def tqdm_joblib(total: int | None = None, **kwargs: Any) -> Generator[tqdm, None, None]:
+def tqdm_joblib(
+    total: int | None = None, **kwargs: Any
+) -> Generator[tqdm[Any], None, None]:
     pbar = tqdm(total=total, miniters=1, smoothing=0, **kwargs)
 
     class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):  # type: ignore[misc]
@@ -518,5 +524,5 @@ def main(overwrite: bool = False, verbose: bool = False) -> None:
         )
     # Save metrics to csv
     df = pd.concat([pd.DataFrame(row, index=[0]) for row in df_rows], ignore_index=True)
-    df.columns = ["problem", "algorithm", "metric", "value"]
+    df.columns = ["problem", "algorithm", "metric", "value"]  # type: ignore[assignment]
     df.to_csv(os.path.join("results", experiment_name, "metrics.csv"), index=False)

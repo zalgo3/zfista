@@ -9,10 +9,7 @@ on:
       - main
 
 jobs:
-  unittest:
-    concurrency:
-      group: ${{ github.workflow }}-unittest-${{ github.ref }}-${{ matrix.config.os }}-${{ matrix.python }}
-      cancel-in-progress: true
+  check:
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
@@ -27,43 +24,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          architecture: x64
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ matrix.config.pip }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
+      - name: Install tox
         run: |
           pip install --upgrade pip
-          pip install .[test]
+          pip install tox tox-gh-actions
       - name: Test
-        run: python -m unittest discover
-      - name: mypy
-        run: mypy .
-  lint:
-    concurrency:
-      group: ${{ github.workflow }}-lint-${{ github.ref }}
-      cancel-in-progress: true
-    runs-on: ubuntu-latest
-    name: Lint
-    steps:
-      - uses: actions/checkout@v4
-      - name: Ruff Lint
-        uses: astral-sh/ruff-action@v1
-      - name: Ruff Format
-        uses: astral-sh/ruff-action@v1
-        with:
-          args: "format --check"
+        run: tox
   test-docs:
-    concurrency:
-      group: ${{ github.workflow }}-test-docs-${{ github.ref }}
-      cancel-in-progress: true
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    needs: [unittest, lint]
+    needs: [check]
     name: Test docs
     steps:
       - id: deployment
@@ -71,12 +41,9 @@ jobs:
         with:
           publish: false
   deploy-docs:
-    concurrency:
-      group: ${{ github.workflow }}-deploy-docs-${{ github.ref }}
-      cancel-in-progress: true
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    needs: [unittest, lint]
+    needs: [check]
     name: Deploy docs
     environment:
       name: github-pages

@@ -20,10 +20,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
-    "scikit-learn",
-    "mypy",
-]
 docs = [
     "sphinx",
     "sphinxcontrib-katex",
@@ -31,9 +27,18 @@ docs = [
 ]
 
 [tool.mypy]
-ignore_missing_imports = true
 strict = true
 exclude = ['build', 'venv']
+
+[[tool.mypy.overrides]]
+module = [
+    "scipy.*",
+    "pymoo.*",
+    "jaxopt.*",
+    "mpl_toolkits.mplot3d.*",
+    "joblib.*",
+]
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 select = [
@@ -44,6 +49,8 @@ select = [
     "I",
     "B",
     "UP",
+    "FA",
+    "TCH",
 ]
 ignore = [
     "E111",

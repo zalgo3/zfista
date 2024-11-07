@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Sequence
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import jax
 import numpy as np
 from jaxopt.projection import projection_box
 from jaxopt.prox import prox_lasso
 from numpy.typing import NBitBase, NDArray
-from scipy.optimize import OptimizeResult
 
 from zfista import minimize_proximal_gradient
 from zfista._typing import FloatArray
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from scipy.optimize import OptimizeResult
 
 T = TypeVar("T", bound=NBitBase)
 
