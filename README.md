@@ -22,35 +22,44 @@ Note that FISTA also requires $f$ to be convex.
 
 - Documentation: https://zalgo3.github.io/zfista/
 
-## Requirements
+### Requirements
 - Python 3.9 or later
 
-## Install
-```sh
+### Install
+```Shell
 pip install zfista
 ```
 
-## Quickstart
+### Quickstart
 ```python
 from zfista import minimize_proximal_gradient
 help(minimize_proximal_gradient)
 ```
 
-## Examples
+## For developers
+
+### Installation
+```Shell
+pip install -e .
+```
+
+### Examples
 You can run some examples on jupyter notebooks.
 ```Shell
+pip install -e ".[examples]"
 jupyter notebook
 ```
 
-## Testing
+### Testing
 You can run all tests by
 ```Shell
-python -m unittest discover
+pip install tox
+tox
 ```
 
-## Benchmark
+### Benchmark
 You can run the benchmark by
 ```Shell
-pip install -U joblib matplotlib pandas SciencePlots tqdm
+pip install -e ".[bench]"
 python runtests.py
 ```

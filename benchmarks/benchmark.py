@@ -12,6 +12,7 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scienceplots  # noqa: F401
 from joblib import Parallel, delayed
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm.auto import tqdm
